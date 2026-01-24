@@ -1,0 +1,445 @@
+{
+  "version": "1.0",
+  "templates": [
+    {
+      "id": "plan-phase",
+      "workflow": "workflows/plan-phase.md",
+      "category": "planning",
+      "description": "Create executable plan for a phase",
+      "patterns": [
+        "plan phase",
+        "create plan for phase",
+        "break down phase",
+        "planning phase",
+        "plan the phase"
+      ],
+      "variables": [
+        {
+          "name": "phase_number",
+          "required": false,
+          "patterns": ["phase\\s+(\\d+)", "(\\d+)(?:st|nd|rd|th)?\\s+phase", "^(\\d+)$"],
+          "prompt": "Which phase number? (or press enter for next unplanned)",
+          "type": "number"
+        }
+      ],
+      "examples": [
+        "plan phase 5",
+        "I need to plan phase 3",
+        "create a plan for the next phase",
+        "break down phase 7 into tasks",
+        "let's plan phase 12",
+        "planning for the 3rd phase"
+      ]
+    },
+    {
+      "id": "discuss-phase",
+      "workflow": "workflows/discuss-phase.md",
+      "category": "planning",
+      "description": "Gather context for a phase through adaptive questioning",
+      "patterns": [
+        "discuss phase",
+        "talk about phase",
+        "phase discussion",
+        "explore phase",
+        "gather context for phase"
+      ],
+      "variables": [
+        {
+          "name": "phase_number",
+          "required": false,
+          "patterns": ["phase\\s+(\\d+)", "(\\d+)(?:st|nd|rd|th)?\\s+phase"],
+          "prompt": "Which phase number?",
+          "type": "number"
+        }
+      ],
+      "examples": [
+        "discuss phase 4",
+        "let's talk about phase 6",
+        "I want to explore phase 2 before planning",
+        "gather context for the next phase",
+        "discuss what phase 5 should include"
+      ]
+    },
+    {
+      "id": "research-phase",
+      "workflow": "workflows/research-phase.md",
+      "category": "planning",
+      "description": "Research unknowns before planning a phase",
+      "patterns": [
+        "research phase",
+        "investigate phase",
+        "explore unknowns",
+        "research for phase",
+        "look into phase"
+      ],
+      "variables": [
+        {
+          "name": "phase_number",
+          "required": false,
+          "patterns": ["phase\\s+(\\d+)", "(\\d+)(?:st|nd|rd|th)?\\s+phase"],
+          "prompt": "Which phase number to research?",
+          "type": "number"
+        }
+      ],
+      "examples": [
+        "research phase 8",
+        "investigate what phase 3 needs",
+        "explore unknowns for phase 5",
+        "look into phase 7 requirements",
+        "research before planning phase 4"
+      ]
+    },
+    {
+      "id": "list-phase-assumptions",
+      "workflow": "workflows/list-phase-assumptions.md",
+      "category": "planning",
+      "description": "Surface Claude's assumptions about a phase approach",
+      "patterns": [
+        "list assumptions",
+        "phase assumptions",
+        "what assumptions",
+        "show assumptions",
+        "assumptions for phase"
+      ],
+      "variables": [
+        {
+          "name": "phase_number",
+          "required": false,
+          "patterns": ["phase\\s+(\\d+)", "(\\d+)(?:st|nd|rd|th)?\\s+phase"],
+          "prompt": "Which phase to list assumptions for?",
+          "type": "number"
+        }
+      ],
+      "examples": [
+        "list assumptions for phase 3",
+        "what assumptions are we making about phase 5",
+        "show phase assumptions",
+        "assumptions before planning phase 7"
+      ]
+    },
+    {
+      "id": "understand",
+      "workflow": "workflows/understand.md",
+      "category": "planning",
+      "description": "Convert vague goals into concrete plans through analysis",
+      "patterns": [
+        "understand goal",
+        "clarify goal",
+        "decompose goal",
+        "break down goal",
+        "analyze goal"
+      ],
+      "variables": [
+        {
+          "name": "goal_description",
+          "required": false,
+          "patterns": ["understand\\s+(.+)", "clarify\\s+(.+)", "goal:\\s*(.+)"],
+          "prompt": "What goal would you like to understand?",
+          "type": "string"
+        }
+      ],
+      "examples": [
+        "help me understand this goal",
+        "clarify what we're trying to build",
+        "decompose this into concrete steps",
+        "break down my vague idea into a plan",
+        "analyze this goal and create a roadmap"
+      ]
+    },
+    {
+      "id": "execute-plan",
+      "workflow": "workflows/execute-phase.md",
+      "category": "execution",
+      "description": "Execute a PLAN.md file with atomic commits",
+      "patterns": [
+        "execute plan",
+        "run plan",
+        "execute phase",
+        "start execution",
+        "do the plan"
+      ],
+      "variables": [
+        {
+          "name": "plan_path",
+          "required": false,
+          "patterns": ["([\\w-]+/[\\w-]+-PLAN\\.md)", "(\\d+-\\d+)", "plan\\s+(\\d+-\\d+)"],
+          "prompt": "Which plan to execute? (e.g., 16-01 or path to PLAN.md)",
+          "type": "path"
+        }
+      ],
+      "examples": [
+        "execute plan 16-01",
+        "run the next plan",
+        "execute phase 5 plan",
+        "start execution of 03-02-PLAN.md",
+        "do the plan for phase 7"
+      ]
+    },
+    {
+      "id": "health-check",
+      "workflow": "workflows/health-check.md",
+      "category": "execution",
+      "description": "Run health check and update dashboard",
+      "patterns": [
+        "health check",
+        "run health check",
+        "check health",
+        "project health",
+        "status check"
+      ],
+      "variables": [],
+      "examples": [
+        "run a health check",
+        "check project health",
+        "what's the health status",
+        "run health check on the project",
+        "check if everything is healthy"
+      ]
+    },
+    {
+      "id": "analyze-codebase",
+      "workflow": "workflows/analyze-codebase.md",
+      "category": "analysis",
+      "description": "Run comprehensive codebase analysis",
+      "patterns": [
+        "analyze codebase",
+        "codebase analysis",
+        "analyze code",
+        "scan codebase",
+        "code analysis"
+      ],
+      "variables": [],
+      "examples": [
+        "analyze the codebase",
+        "run codebase analysis",
+        "scan for security issues",
+        "analyze code for problems",
+        "check codebase health"
+      ]
+    },
+    {
+      "id": "analyze-patterns",
+      "workflow": "workflows/analyze-patterns.md",
+      "category": "analysis",
+      "description": "Analyze patterns from execution history",
+      "patterns": [
+        "analyze patterns",
+        "pattern analysis",
+        "review patterns",
+        "execution patterns",
+        "learning patterns"
+      ],
+      "variables": [],
+      "examples": [
+        "analyze patterns from history",
+        "what patterns have we learned",
+        "review execution patterns",
+        "analyze learning patterns",
+        "show pattern analysis"
+      ]
+    },
+    {
+      "id": "suggest",
+      "workflow": "workflows/suggest.md",
+      "category": "analysis",
+      "description": "Generate prioritized goal suggestions from codebase",
+      "patterns": [
+        "suggest goals",
+        "what should I build",
+        "suggestions",
+        "recommend goals",
+        "goal suggestions"
+      ],
+      "variables": [],
+      "examples": [
+        "suggest what to work on",
+        "what should I build next",
+        "give me goal suggestions",
+        "recommend what to improve",
+        "suggest next goals"
+      ]
+    },
+    {
+      "id": "new-project",
+      "workflow": "workflows/new-project.md",
+      "category": "project",
+      "description": "Initialize a new project with deep context gathering",
+      "patterns": [
+        "new project",
+        "start project",
+        "create project",
+        "initialize project",
+        "init project"
+      ],
+      "variables": [],
+      "examples": [
+        "start a new project",
+        "create a new project",
+        "initialize the project",
+        "let's start a new project",
+        "init a new GSD project"
+      ]
+    },
+    {
+      "id": "new-milestone",
+      "workflow": "workflows/new-milestone.md",
+      "category": "project",
+      "description": "Create a new milestone with phases",
+      "patterns": [
+        "new milestone",
+        "create milestone",
+        "add milestone",
+        "next milestone",
+        "start milestone"
+      ],
+      "variables": [
+        {
+          "name": "milestone_version",
+          "required": false,
+          "patterns": ["v?(\\d+\\.\\d+)", "version\\s+(\\d+\\.\\d+)", "milestone\\s+v?(\\d+\\.\\d+)"],
+          "prompt": "What version for this milestone? (e.g., 3.0)",
+          "type": "string"
+        }
+      ],
+      "examples": [
+        "create a new milestone",
+        "start milestone v3.0",
+        "add the next milestone",
+        "new milestone for version 4.0",
+        "create milestone 2.5"
+      ]
+    },
+    {
+      "id": "discuss-milestone",
+      "workflow": "workflows/discuss-milestone.md",
+      "category": "project",
+      "description": "Gather context for next milestone through questioning",
+      "patterns": [
+        "discuss milestone",
+        "talk about milestone",
+        "milestone discussion",
+        "plan milestone",
+        "milestone context"
+      ],
+      "variables": [],
+      "examples": [
+        "discuss the next milestone",
+        "let's talk about the milestone",
+        "gather context for milestone",
+        "what should be in the next milestone",
+        "discuss milestone goals"
+      ]
+    },
+    {
+      "id": "complete-milestone",
+      "workflow": "workflows/complete-milestone.md",
+      "category": "project",
+      "description": "Archive completed milestone and prepare for next",
+      "patterns": [
+        "complete milestone",
+        "finish milestone",
+        "milestone done",
+        "archive milestone",
+        "close milestone"
+      ],
+      "variables": [],
+      "examples": [
+        "complete the milestone",
+        "finish milestone v2.0",
+        "archive the current milestone",
+        "close out the milestone",
+        "mark milestone as done"
+      ]
+    },
+    {
+      "id": "progress",
+      "workflow": "workflows/progress.md",
+      "category": "monitoring",
+      "description": "Check project progress and route to next action",
+      "patterns": [
+        "check progress",
+        "show progress",
+        "what's next",
+        "where are we",
+        "project status"
+      ],
+      "variables": [],
+      "examples": [
+        "what's the progress",
+        "show me the project status",
+        "where are we at",
+        "what should I work on next",
+        "check project progress",
+        "how far along are we"
+      ]
+    },
+    {
+      "id": "pause-work",
+      "workflow": "workflows/pause-work.md",
+      "category": "monitoring",
+      "description": "Create context handoff when pausing work mid-phase",
+      "patterns": [
+        "pause work",
+        "stop for now",
+        "taking a break",
+        "save context",
+        "pause session"
+      ],
+      "variables": [],
+      "examples": [
+        "pause work for now",
+        "I need to stop for today",
+        "save my context",
+        "taking a break, save state",
+        "pause this session"
+      ]
+    },
+    {
+      "id": "resume-work",
+      "workflow": "workflows/resume-work.md",
+      "category": "monitoring",
+      "description": "Resume work from previous session with full context",
+      "patterns": [
+        "resume work",
+        "continue work",
+        "pick up where we left off",
+        "restore context",
+        "resume session"
+      ],
+      "variables": [],
+      "examples": [
+        "resume work",
+        "continue where we left off",
+        "pick up the previous session",
+        "restore my context",
+        "continue from yesterday"
+      ]
+    },
+    {
+      "id": "consider-issues",
+      "workflow": "workflows/consider-issues.md",
+      "category": "monitoring",
+      "description": "Review deferred issues with codebase context",
+      "patterns": [
+        "review issues",
+        "consider issues",
+        "check issues",
+        "deferred issues",
+        "outstanding issues"
+      ],
+      "variables": [],
+      "examples": [
+        "review deferred issues",
+        "let's consider the issues",
+        "check outstanding issues",
+        "what issues are pending",
+        "review issues with context"
+      ]
+    }
+  ],
+  "metadata": {
+    "generated": "2026-01-08",
+    "workflow_count": 18,
+    "categories": ["planning", "execution", "analysis", "project", "monitoring"]
+  }
+}

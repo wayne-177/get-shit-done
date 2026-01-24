@@ -18,8 +18,8 @@ Then verify each level against the actual codebase.
 </core_principle>
 
 <required_reading>
-@~/.claude/get-shit-done/references/verification-patterns.md
-@~/.claude/get-shit-done/templates/verification-report.md
+@/Users/macuser/.claude/get-shit-done/references/verification-patterns.md
+@/Users/macuser/.claude/get-shit-done/templates/verification-report.md
 </required_reading>
 
 <process>
@@ -564,7 +564,7 @@ Fill template sections:
 9. **Recommended Fix Plans:** If gaps_found
 10. **Verification Metadata:** Approach, timing, counts
 
-See ~/.claude/get-shit-done/templates/verification-report.md for complete template.
+See /Users/macuser/.claude/get-shit-done/templates/verification-report.md for complete template.
 </step>
 
 <step name="return_to_orchestrator">

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "GeneratedWorkflow",
+  "description": "JSON Schema for AI-generated GSD workflows. Compatible with Claude structured outputs (no recursion, additionalProperties: false everywhere).",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Unique workflow identifier in kebab-case (e.g., 'analyze-logs', 'deploy-staging')"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 10,
+      "maxLength": 200,
+      "description": "One-line description of what the workflow does"
+    },
+    "category": {
+      "type": "string",
+      "enum": ["planning", "execution", "analysis", "project", "monitoring"],
+      "description": "Workflow category for organization and disambiguation"
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3,
+        "maxLength": 50
+      },
+      "minItems": 3,
+      "maxItems": 8,
+      "description": "Intent phrases that trigger this workflow (e.g., 'analyze logs', 'check logs')"
+    },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 10,
+        "maxLength": 100
+      },
+      "minItems": 4,
+      "maxItems": 10,
+      "description": "Full natural language utterances for fuzzy matching"
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$",
+            "description": "Variable name in snake_case"
+          },
+          "required": {
+            "type": "boolean",
+            "description": "Whether workflow fails without this variable"
+          },
+          "patterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "maxItems": 5,
+            "description": "Regex patterns with capture groups to extract value"
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 10,
+            "maxLength": 200,
+            "description": "Question to ask user if value not extracted from input"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["number", "string", "path"],
+            "default": "string",
+            "description": "Expected variable type for validation"
+          }
+        },
+        "required": ["name", "required", "patterns", "prompt"],
+        "additionalProperties": false
+      },
+      "maxItems": 5,
+      "description": "Variables to extract from user input"
+    },
+    "workflow_content": {
+      "type": "string",
+      "minLength": 100,
+      "description": "The complete workflow markdown content with <purpose>, <process>, <success_criteria> sections"
+    }
+  },
+  "required": ["id", "description", "category", "patterns", "examples", "workflow_content"],
+  "additionalProperties": false
+}
