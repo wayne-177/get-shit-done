@@ -5,112 +5,137 @@
 ## Languages
 
 **Primary:**
-- JavaScript (Node.js) - Installation and CLI infrastructure, hooks, and build scripts
-- Markdown - Command definitions, agent definitions, reference documentation, templates
+- JavaScript (Node.js) - All runtime execution, installation, hooks, configuration
+- Markdown - Command definitions, agent specifications, workflow templates, documentation
 
 **Secondary:**
-- YAML - Configuration format for command and agent frontmatter (Claude Code/OpenCode format)
+- YAML - Command frontmatter metadata (name, description, allowed-tools)
+- JSON - Configuration, templates, templates index, workflow schema
 
 ## Runtime
 
 **Environment:**
-- Node.js 16.7.0 or later (see `package.json` engines field)
+- Node.js >= 16.7.0
 
 **Package Manager:**
-- npm (used for dependency management)
-- Lockfile: `package-lock.json` (present and version 3)
+- npm
+- Lockfile: Present (`package-lock.json` v3)
 
 ## Frameworks
 
 **Core:**
-- None (zero production dependencies) - GSD is built purely with Node.js standard library modules
+- No application frameworks - Standalone system for meta-prompting and context engineering
+- GSD is a system that runs AS COMMANDS within Claude Code and OpenCode (not a framework itself)
 
-**Build/Dev:**
-- esbuild ^0.24.0 - Bundler for hook compilation (devDependency only)
+**Build/Development:**
+- esbuild 0.24.0 - Bundling hooks for distribution
 
 ## Key Dependencies
 
-**Production Dependencies:**
-- None - The package has zero production dependencies for maximum portability
-
-**Dev Dependencies:**
-- esbuild - For compiling hooks to distribution directory (`hooks/dist/`)
-
-## Node.js Built-in Modules Used
-
-**Installation (`bin/install.js`):**
-- `fs` - File system operations (read/write config files, copy directories)
-- `path` - Cross-platform path handling for config directories
-- `os` - System home directory detection, platform detection
-- `readline` - Interactive prompts for runtime and install location selection
-
-**Hooks (`hooks/gsd-*.js`):**
-- `fs` - File I/O for cache and version files
-- `path` - Path resolution for global and local config
-- `os` - Home directory access
-- `child_process` - Subprocess spawning for background checks, running npm commands
-
-**Build Scripts (`scripts/build-hooks.js`):**
-- `fs` - Copy operations
-- `path` - Path manipulation
+**Critical:**
+- esbuild 0.24.0 - Bundles pre-publish hooks (gsd-check-update.js, gsd-statusline.js)
+  - Only dev dependency - hooks are pure Node.js, no bundling actually needed currently
+  - Optional platform packages for cross-platform support (darwin-arm64, linux-x64, etc.)
 
 ## Configuration
 
 **Environment:**
-- CLI-driven configuration (interactive install prompts or command-line flags)
-- Environment variables read:
-  - `CLAUDE_CONFIG_DIR` - Override default Claude Code config location (`~/.claude`)
-  - `OPENCODE_CONFIG_DIR` - Override OpenCode config location
-  - `OPENCODE_CONFIG` - Alternative OpenCode config spec (uses its directory)
-  - `XDG_CONFIG_HOME` - XDG standard for config directory
+- Installation targets: `~/.claude/` (Claude Code) or `~/.config/opencode/` (OpenCode)
+- Configuration via: `settings.json` at runtime config dir
+- Mode configuration: `.planning/config.json` (interactive/yolo modes, workflow options)
 
-**Config Directories (Runtime):**
-- Claude Code: `~/.claude/` (or `CLAUDE_CONFIG_DIR` override)
-- OpenCode: `~/.config/opencode/` (or `OPENCODE_CONFIG_DIR` override, respects XDG_CONFIG_HOME)
-- Local project install: `./.claude/` or `./.opencode/` (created in project root)
-
-**Settings Files:**
-- `~/.claude/settings.json` - Claude Code settings (hooks, statusline configuration)
-- `~/.config/opencode/opencode.json` - OpenCode permissions and settings
-- `.claude/settings.local.json` - Example local settings file
-
-**Build Configuration:**
-- `scripts/build-hooks.js` - Custom build script (copies hooks to `hooks/dist/`)
-- `package.json` - Defines `build:hooks` script and `prepublishOnly` hook
+**Build:**
+- Build script: `scripts/build-hooks.js` - copies hooks to `hooks/dist/` for npm publish
+- Hook distribution: Pre-built hooks included in npm package under `hooks/dist/`
 
 ## Platform Requirements
 
 **Development:**
-- Any OS with Node.js 16.7.0+ (Mac, Windows, Linux supported)
-- bash or shell for interactive prompts
-- TTY for interactive mode (falls back to non-interactive on environments like WSL2)
+- Node.js 16.7.0+
+- Git (for version control and hooks)
+- Bash/shell access (installation and execution contexts)
+- Cross-platform: macOS, Windows (via WSL2 detection), Linux
 
-**Installation/Deployment:**
-- npm (for `npx get-shit-done-cc` installation)
-- Node.js 16.7.0+ on target system
-- Write access to config directory (`~/.claude/` or `~/.config/opencode/`)
+**Production:**
+- Deployment target: NPM registry (npx get-shit-done-cc)
+- Installation: Global (`~/.claude/` or `~/.config/opencode/`) or Local (`./.claude/` or `./.opencode/`)
+- Runtime: Claude Code v1.0+ or OpenCode
 
-**Distribution:**
-- Published to npm as `get-shit-done-cc` package
-- Installed globally via `npx get-shit-done-cc`
-- See `package.json` files entry for what gets distributed (excludes node_modules, `.git`)
+## Version Management
 
-## Notable Technical Decisions
+**Current Version:** 1.9.13
 
-**Zero Production Dependencies:**
-- Reduces security surface and installation size
-- Uses only Node.js standard library (available since Node 16)
-- Maximizes portability across environments
+**Update Check:**
+- Hook: `gsd-check-update.js` (installed to hooks/)
+- Trigger: SessionStart lifecycle hook in Claude Code
+- Method: `npm view get-shit-done-cc version` command
+- Cache: `~/.claude/cache/gsd-update-check.json` (checked for staleness)
+- Notification: Statusline shows update available indicator
 
-**Cross-Platform Path Handling:**
-- Forward slashes used in hook commands for Windows compatibility
-- Path expansion for `~` handled manually (shells don't expand in env vars)
-- XDG Base Directory spec compliance for OpenCode
+## Core Components
 
-**Background Process Management:**
-- Update checks run in detached background process (non-blocking)
-- Version comparison uses npm registry query (`npm view get-shit-done-cc version`)
-- Cache-based approach avoids repeated network calls
+**Installation:**
+- `bin/install.js` - Interactive/non-interactive installer
+  - Supports Claude Code and OpenCode runtime targets
+  - Handles global and local installations
+  - Custom config directory support via `--config-dir`
+  - Path replacement for cross-platform compatibility
+  - Frontmatter conversion for OpenCode compatibility
+
+**Hooks (Runtime Integrations):**
+- `hooks/gsd-statusline.js` - Statusline display in Claude Code showing model, task, context usage
+- `hooks/gsd-check-update.js` - Background update checker (spawns detached Node process)
+- Both hooks read stdin JSON and write text output
+
+**Commands:**
+- 40+ slash commands in `commands/gsd/` (nested markdown files)
+- Each command: frontmatter metadata + execution objectives
+- Tools: Read, Write, Bash, Glob, Grep, Task, WebFetch, mcp__context7__* (Claude Code MCP)
+
+**Agents:**
+- 11 specialized markdown agents in `agents/`
+- Orchestration: Commands spawn agents via Task tool
+- Subagent pattern: agents are prompts executed by Claude, not code modules
+
+**Workflows:**
+- Reference templates in `get-shit-done/workflows/` (markdown specifications)
+- Loaded by commands and agents for context
+- Workflow execution: Sequential or parallel depending on mode
+
+## Data Storage
+
+**Local Storage:**
+- Project state: `.planning/` directory structure
+  - `config.json` - Mode and workflow settings
+  - `STATE.md` - Project memory and context
+  - `PROJECT.md` - Vision and requirements
+  - `ROADMAP.md` - Phase breakdown
+  - `REQUIREMENTS.md` - Scoped requirements with REQ-IDs
+  - `research/` - Domain research documents
+  - `codebase/` - Codebase analysis documents (STACK.md, ARCHITECTURE.md, etc.)
+
+**Session Storage:**
+- `~/.claude/todos/` - Session todo lists (JSON format)
+- `~/.claude/cache/` - Update check cache
+- `settings.json` - Claude Code settings (hooks, statusline config)
+
+**OpenCode Specific:**
+- `~/.config/opencode/opencode.json` - OpenCode configuration
+- `~/.config/opencode/permission/` - Path-based permission rules
+- `command/gsd-*.md` - Flattened command structure (vs nested `commands/gsd/`)
+
+## Cross-Platform Considerations
+
+**Windows Support:**
+- WSL2 detection in installer (non-interactive fallback)
+- Forward-slash path normalization in hook commands
+- `windowsHide` flag on spawned processes (prevents console flash)
+- `npm` command availability check via `execSync`
+
+**Path Handling:**
+- Tilde expansion (`~`) for home directory references
+- Environment variable support: `CLAUDE_CONFIG_DIR`, `OPENCODE_CONFIG_DIR`, `XDG_CONFIG_HOME`
+- Path prefix replacement in markdown files during installation
 
 ---
 

@@ -5,182 +5,189 @@
 ## APIs & External Services
 
 **NPM Registry:**
-- Service: npm package registry (npmjs.org)
-- What it's used for: Version checking for GSD updates, installing get-shit-done-cc package
-- Client: `npm view` command via `child_process.execSync()`
-- Auth: None (public read)
-- Location: `hooks/gsd-check-update.js` line 45
-- Timeout: 10 seconds
+- Service: NPM public registry
+- Purpose: Version checking and package distribution
+- SDK/Client: Node.js `execSync('npm view get-shit-done-cc version')`
+- Auth: Public (no authentication required)
+- Trigger: `gsd-check-update.js` hook runs on SessionStart
+- Timeout: 10 seconds (hardcoded, prevents hanging)
+
+**Discord Community:**
+- Service: Discord server
+- Purpose: Community support and collaboration
+- URL: https://discord.gg/5JJgD5svVS
+- Integration: Link shown after installation, referenced in README and help
+- Type: External community link (no programmatic integration)
+
+## Code Platforms
 
 **GitHub:**
-- Service: GitHub repository (glittercowboy/get-shit-done)
-- What it's used for: Release management, source repository
-- Client: GitHub Actions workflow
-- Auth: GitHub Actions context (no explicit credentials needed)
-- Location: `.github/workflows/release.yml`
+- Repository: https://github.com/glittercowboy/get-shit-done
+- Purpose: Source control and distribution
+- Integration: Package links to GitHub issues and repository
+- Files: `.git/` (git repository), `bin/install.js` has remote URL
+
+**Claude Code:**
+- IDE: Anthropic's Claude Code
+- Purpose: Runtime host for all commands and agents
+- Integration: Tight coupling
+  - Commands register via `~/.claude/commands/gsd/`
+  - Agents spawn via Task tool
+  - Settings via `~/.claude/settings.json`
+  - Hooks via `~/.claude/hooks/`
+  - Todos via `~/.claude/todos/` (session-specific)
+  - Statusline via stdin/stdout JSON exchange
+  - MCP tools: `mcp__context7__*` for research capabilities
+
+**OpenCode:**
+- IDE: Open source code editor
+- Purpose: Alternative runtime (free models support)
+- Integration: Compatibility layer
+  - Commands register via `~/.config/opencode/command/`
+  - Path: `~/.config/opencode/` (XDG Base Directory spec)
+  - Permission system: `~/.config/opencode/opencode.json` (read/external_directory)
+  - Frontmatter conversion: Claude -> OpenCode format (allowed-tools -> tools object)
+  - Tool mapping: AskUserQuestion->question, SlashCommand->skill, etc.
 
 ## Data Storage
 
-**Databases:**
-- None - GSD is a stateless CLI tool
-
-**File Storage:**
-- Local filesystem only
-- Installation directories:
-  - `~/.claude/` - Claude Code global install
-  - `~/.config/opencode/` - OpenCode global install
-  - `./.claude/` or `./.opencode/` - Local project install
-- Configuration: `settings.json` (Claude Code) or `opencode.json` (OpenCode)
-- Cache: `~/.claude/cache/gsd-update-check.json` - Version check cache
-
-**Caching:**
-- Local file-based cache only
-- Update check cache location: `~/.claude/cache/gsd-update-check.json`
-- Cache structure: JSON with `update_available`, `installed`, `latest`, `checked` fields
-- No external cache services
+**Filesystem Only (No External Databases):**
+- Configuration: JSON files in config directories
+- Project state: Markdown files in `.planning/`
+- Todo lists: Session-specific JSON in `~/.claude/todos/`
+- Cache: Update check results in `~/.claude/cache/gsd-update-check.json`
+- File storage: Local filesystem only, no cloud backend
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- None - GSD is a CLI installer with no authentication
-
-**User Context:**
-- Operates within current user's shell context
-- Reads/writes to user's home directory
-- No user accounts or authentication tokens
-
-## Authorization & Permissions
-
-**System-Level:**
-- Requires write access to config directories
-- OpenCode: GSD configures read permissions in `opencode.json` to allow access to GSD reference docs
-- Claude Code: Stores settings in `.claude/settings.json`
-
-**OpenCode Permission Configuration:**
-- Location: `~/.config/opencode/opencode.json`
-- Permissions set during install:
-  - `permission.read` - Allow reading GSD docs
-  - `permission.external_directory` - Allow external directory access for GSD paths
-- Format: Path-based allowlists in `opencode.json`
+- Custom: No external auth provider
+- Implementation: File system based
+  - Session identification via Claude Code session_id (from statusline JSON input)
+  - User identification via workspace directory (from statusline JSON input)
+  - No login/logout mechanism
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None - No external error tracking
+- None detected - No external error tracking service
 
 **Logs:**
-- Console output only (colored terminal output)
-- No file-based logging
-- No external log aggregation
-
-**Health Checks:**
-- Version check via npm registry (background, non-blocking)
-- Cache-based to avoid repeated checks
+- Approach: Console stdout/stderr to Claude Code interface
+- Log files: None (real-time output to IDE)
+- Cache analysis: Update check results written to local cache file
+- Debug: Manual inspection of `.planning/` artifacts
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- npm registry (npmjs.org)
-- GitHub repository (github.com/glittercowboy/get-shit-done)
+- NPM registry (public package)
+- GitHub (source repository)
+- Distribution: `npx get-shit-done-cc` (via NPM)
 
 **CI Pipeline:**
-- GitHub Actions only
-- Workflow: `.github/workflows/release.yml`
-- Trigger: Git tag push matching `v[0-9]+.[0-9]+.[0-9]+` pattern
-- Steps:
-  1. Checkout code
-  2. Extract version from git tag
-  3. Extract changelog section for version
-  4. Create GitHub Release with release notes
-
-**Release Automation:**
-- Uses `softprops/action-gh-release@v2` to publish releases
-- Releases to GitHub with changelog extracted from CHANGELOG.md
-
-## Build & Package Distribution
-
-**Package Manager:**
-- npm registry
-- Package: `get-shit-done-cc`
-- Installation method: `npx get-shit-done-cc`
-- Distribution files (in `package.json` files field):
-  - `bin/` - Installation script
-  - `commands/` - GSD commands
-  - `agents/` - GSD agent definitions
-  - `get-shit-done/` - Reference docs and templates
-  - `hooks/dist/` - Bundled hook scripts
-  - `scripts/` - Build scripts
+- Not detected in codebase (no GitHub Actions, GitLab CI, etc. files)
+- Manual build: `npm run build:hooks` (prepublishOnly script)
+- Hook bundling: esbuild (optional, hooks are currently pure Node.js)
 
 ## Environment Configuration
 
 **Required env vars:**
-- None (all optional, with defaults)
-
-**Optional env vars:**
-- `CLAUDE_CONFIG_DIR` - Override Claude Code config location (default: `~/.claude`)
-- `OPENCODE_CONFIG_DIR` - Override OpenCode config location (respects XDG)
-- `OPENCODE_CONFIG` - Alternative way to specify OpenCode config directory
-- `XDG_CONFIG_HOME` - XDG Base Directory spec (used for OpenCode if set)
+- CLAUDE_CONFIG_DIR - (Optional) Override default `~/.claude` config directory
+- OPENCODE_CONFIG_DIR - (Optional) Override default `~/.config/opencode` directory
+- OPENCODE_CONFIG - (Optional) Explicit opencode.json file path
+- XDG_CONFIG_HOME - (Optional) XDG Base Directory spec compliance
+- npm view command requires NPM in PATH (for update checks)
 
 **Secrets location:**
-- None - GSD stores no secrets
-- Settings stored in user's config directory with restricted file permissions
+- Not applicable - No API keys or secrets required
+- Package uses public APIs only
+- All configuration is local file-based
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None - GSD is not a server
+- None detected
 
 **Outgoing:**
-- None - No outgoing webhook calls
+- None detected (statusline is request-response, not webhook)
 
-## Claude Code / OpenCode Integration
+## IDE Integration Points
 
-**Claude Code:**
-- Installs to `~/.claude/`
-- Registers hooks in `settings.json` under `hooks.SessionStart`
-- Configures statusline in `settings.json` with command reference
-- Commands invoked as `/gsd:command-name` (colon-based)
-- Agents deployed to `agents/` directory
+**Claude Code Integration:**
 
-**OpenCode:**
-- Installs to `~/.config/opencode/`
-- Uses flat command structure: `command/gsd-*.md` (invoked as `/gsd-command`)
-- Permissions configured in `opencode.json`
-- Frontmatter converted from Claude Code format to OpenCode format:
-  - `allowed-tools:` array → `tools:` object with boolean values
-  - Color names (e.g., "cyan") → Hex colors (e.g., "#00FFFF")
-  - Tool names normalized to lowercase
-- Path references replaced during installation for compatibility
+1. **Settings.json Hooks:**
+   - `SessionStart` - Triggers update check hook
+   - Hook type: command (executes Node.js script)
+   - Command: `node ~/.claude/hooks/gsd-check-update.js`
 
-**Cross-Runtime Compatibility:**
-- Single source tree with conversion during installation
-- `convertClaudeToOpencodeFrontmatter()` handles format translation
-- Tool name mapping: `AskUserQuestion` → `question`, `SlashCommand` → `skill`, etc.
+2. **Statusline:**
+   - Type: command
+   - Command: `node ~/.claude/hooks/gsd-statusline.js`
+   - Input: stdin JSON with model, session_id, workspace dir, context_window
+   - Output: stdout text (statusline display)
+   - Reads: `~/.claude/todos/` for current task, `~/.claude/cache/` for update status
 
-## Installation & Setup Flow
+3. **Slash Commands:**
+   - Location: `~/.claude/commands/gsd/*.md` (nested structure)
+   - Format: Markdown with YAML frontmatter
+   - Invocation: `/gsd:command-name`
+   - Tools allowed: Read, Write, Bash, Glob, Grep, Task, WebFetch, mcp__context7__*
 
-**Interactive Setup:**
-- Prompts for runtime selection (Claude Code / OpenCode / Both)
-- Prompts for install location (Global or Local)
-- Non-TTY fallback to defaults
-- Path expansion for `~` and environment variables
+4. **Task Tool (Agent Spawning):**
+   - Agents are markdown prompts in `~/.claude/agents/gsd-*.md`
+   - Spawned by commands via Task tool
+   - Parallel execution: up to 3 concurrent agents (configurable)
+   - Communication: Return structured text (confirmations, PLAN.md content, etc.)
 
-**Installation Steps:**
-1. Clean previous GSD files
-2. Copy commands (flattened for OpenCode, nested for Claude Code)
-3. Copy `get-shit-done/` reference directory
-4. Copy agents (preserves user-created agents)
-5. Copy CHANGELOG.md and VERSION file
-6. Copy/bundle hooks to `hooks/dist/`
-7. Configure settings.json (hooks, statusline)
-8. Configure opencode.json permissions (OpenCode only)
+5. **MCP Integration:**
+   - Tools: `mcp__context7__*` (Model Context Protocol)
+   - Used by: Researcher agents for project research
+   - Capabilities: Web search, documentation access, context retrieval
 
-**Uninstall:**
-- Removes GSD-specific files and directories
-- Preserves user's custom content
-- Cleans orphaned hooks from previous versions
-- Cleans permission entries from opencode.json
+**OpenCode Integration:**
+
+1. **Command Structure:**
+   - Location: `~/.config/opencode/command/gsd-*.md` (flat structure)
+   - Invocation: `/gsd-command-name` (replaces colons with hyphens)
+   - Tool references: Converted to lowercase (read, write, bash, etc.)
+
+2. **Permission System:**
+   - Config: `~/.config/opencode/opencode.json`
+   - Granted paths:
+     - `~/.config/opencode/get-shit-done/*` - read permission
+     - `~/.config/opencode/get-shit-done/*` - external_directory permission
+   - Purpose: Prevent permission prompts during execution
+
+3. **Frontmatter Conversion:**
+   - Input: Claude Code format (allowed-tools array)
+   - Output: OpenCode format (tools object with true values)
+   - Color conversion: Named colors (cyan, red) -> Hex (#00FFFF, #FF0000)
+   - Command references: `/gsd:help` -> `/gsd-help`
+   - Path references: `~/.claude/` -> `~/.config/opencode/`
+
+## External Tool Dependencies
+
+**None in production:**
+- No external SDKs or clients required
+- No API libraries (axios, node-fetch, etc.)
+- Pure Node.js: fs, path, os, child_process, readline
+- Build-only: esbuild (dev dependency)
+
+## Installation & Uninstall Integrations
+
+**NPX Install Command:**
+- Entry point: `bin/install.js`
+- Target directories auto-detected or configurable
+- Performs path replacement in markdown content
+- Creates hooks/, commands/, agents/, get-shit-done/ directories
+- Updates settings.json with hook configurations
+
+**Uninstall Process:**
+- Removes only GSD-specific files and directories
+- Preserves user content in config directories
+- Cleans up settings.json hook registrations
+- Cleans up orphaned hook entries from previous versions
 
 ---
 

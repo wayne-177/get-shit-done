@@ -2,278 +2,554 @@
 
 **Analysis Date:** 2026-01-24
 
-## Test Framework Status
+## Overview
 
-**No automated test framework present.**
+Get Shit Done uses a multi-layered testing strategy appropriate to its architecture as a meta-prompting system:
 
-This is deliberate. The codebase prioritizes:
-- Manual testing during development (shell testing hooks)
-- Integration testing via real installation flows
-- Hook verification through Claude Code/OpenCode runtime
+1. **Specification-as-test** — PLAN.md files contain expected behavior; verification against PLAN is the test
+2. **Workflow verification** — Checkpoints and human gates verify critical operations
+3. **Automated verification** — Shell scripts in `/gsd:verify-phase` check for TODO comments, stubs, incomplete patterns
+4. **Integration testing** — End-to-end phase execution with checkpoint gates
+5. **Manual testing** — Installation verification, path handling on Windows/Mac/Linux
 
-**No files found:**
-- No `jest.config.js`, `vitest.config.ts`, or test runners
-- No `*.test.js` or `*.spec.js` files
-- No assertion libraries (no Mocha, Chai, Vitest, etc.)
+No traditional unit test framework (Jest, Vitest) is configured. Testing happens through:
+- Bash scripts that verify file states
+- Human checkpoints for critical decisions
+- Phase verification workflows
+- Installation testing with multiple CLI flag combinations
 
-## Manual Testing Patterns
-
-**Development setup for testing:**
-
-```bash
-npm link
-npx get-shit-done-cc
-```
-
-Test locally before publishing (documented in CONTRIBUTING.md line 312).
-
-**Hook validation:** Hooks (`gsd-check-update.js`, `gsd-statusline.js`) are tested via:
-1. Installation to `.claude/hooks/` or `.config/opencode/command/`
-2. Manual invocation in Claude Code/OpenCode sessions
-3. Verification that output appears in statusline/console
-
-**Path testing:** Windows path handling explicitly tested (mentioned in CONTRIBUTING.md, line 248):
-```bash
-# Works on Windows (test paths with backslashes)
-```
-
-## Installation Testing
-
-**Test vectors for `bin/install.js`:**
-
-1. **Interactive mode:**
-   ```bash
-   npx get-shit-done-cc
-   # Select runtime, location, statusline options
-   ```
-
-2. **Non-interactive with flags:**
-   ```bash
-   npx get-shit-done-cc --claude --global
-   npx get-shit-done-cc --opencode --local
-   npx get-shit-done-cc --both --global
-   ```
-
-3. **Custom config directory:**
-   ```bash
-   npx get-shit-done-cc --claude --global --config-dir ~/.claude-bc
-   ```
-
-4. **Uninstall flow:**
-   ```bash
-   npx get-shit-done-cc --claude --global --uninstall
-   ```
-
-5. **Statusline handling:**
-   - Fresh install: installs statusline
-   - Existing statusline: prompts (or --force-statusline)
-   - OpenCode: skips statusline (uses themes)
-
-**Verification approach:**
-
-Directory checks: `fs.existsSync()` and `fs.readdirSync()` verify files copied correctly
-- Function `verifyInstalled(dirPath, description)` — checks directory exists and has entries
-- Function `verifyFileInstalled(filePath, description)` — checks single file exists
-
-JSON validation: `JSON.parse()` with try-catch in settings management
-
-## What Gets Tested
-
-### Code Paths Requiring Manual Verification
-
-**Path handling across platforms:**
-- Linux/Mac: `~/.claude/` and `~/.config/opencode/`
-- Windows: UNC paths, backslash conversion
-- Custom config directory expansion
-
-**Runtime selection:**
-- Claude Code (`.claude`) vs OpenCode (`.config/opencode`)
-- Both runtimes installed side-by-side
-- Flattened command structure for OpenCode
-
-**Frontmatter conversion** (`convertClaudeToOpencodeFrontmatter()`):
-- YAML `allowed-tools:` array → YAML `tools:` object with tool names converted
-- Color names (cyan) → hex (#00FFFF)
-- Command paths `/gsd:` → `/gsd-` (flat structure)
-- Preserves non-tool fields
-
-**Settings.json manipulation:**
-- Adding SessionStart hooks without duplication
-- Removing orphaned hooks on cleanup
-- Statusline configuration (command or URL)
-- Preserving user's other settings
-
-### Code Paths NOT Covered
-
-**Negative test cases are manual:**
-- Invalid JSON in settings.json (handled with try-catch, user warned)
-- Missing directories mid-installation (caught by verify functions)
-- Permission issues on write (Node errors surface naturally)
-- Concurrent installations (undefined behavior, assume single user)
-
-**Environment variations:**
-- WSL2 stdin handling (detected via `process.stdin.isTTY`)
-- Non-TTY environments (fall back to non-interactive defaults)
-- Missing npm (affects update check only, fails gracefully)
-
-## Build Testing
-
-**Build script: `scripts/build-hooks.js`**
-
-Copies hooks to dist for bundling:
-
-```bash
-npm run build:hooks
-```
-
-**What it verifies:**
-- Source files exist: `gsd-check-update.js`, `gsd-statusline.js`
-- Destination directory created: `hooks/dist/`
-- Files actually copied (logs verification)
-
-**Manual test:**
-```bash
-npm run build:hooks
-ls hooks/dist/  # Should contain both hook files
-```
-
-## Hook Testing
-
-### `gsd-check-update.js`
-
-**What it does:**
-1. Spawns background process (non-blocking)
-2. Reads installed version from VERSION file (project or global)
-3. Calls `npm view get-shit-done-cc version` with 10s timeout
-4. Writes result to `~/.claude/cache/gsd-update-check.json`
-
-**Manual verification:**
-```bash
-# After installation
-ls ~/.claude/cache/gsd-update-check.json
-cat ~/.claude/cache/gsd-update-check.json
-# Should show: { update_available: bool, installed: "X.Y.Z", latest: "X.Y.Z", checked: timestamp }
-```
-
-**Test cases:**
-- Installed < latest → `update_available: true`
-- Installed == latest → `update_available: false`
-- npm command fails → `latest: "unknown"`
-- Cache file persists across runs
-
-### `gsd-statusline.js`
-
-**What it does:**
-1. Reads JSON from stdin (provided by Claude Code)
-2. Extracts model, directory, context window, session ID
-3. Reads todos file from `~/.claude/todos/` for current task
-4. Reads update cache from `~/.claude/cache/gsd-update-check.json`
-5. Writes colored statusline to stdout
-
-**Manual verification:**
-```bash
-# Simulate input
-echo '{"model":{"display_name":"Claude 3.5 Sonnet"},"workspace":{"current_dir":"/home/user/project"},"session_id":"abc123","context_window":{"remaining_percentage":45}}' | node hooks/gsd-statusline.js
-# Output: colored status line (model | task | dir | context bar)
-```
-
-**Test cases:**
-- With task: `model | task | dir | context`
-- Without task: `model | dir | context`
-- Update available: `⬆ /gsd:update │ model | ...`
-- No remaining_percentage: skips context display
-- Missing todos dir: skips task display
-- JSON parse error: silent fail (line 81)
+---
 
 ## Testing Philosophy
 
-**No unit tests because:**
-1. Code is procedural (setup/installation scripts)
-2. Heavy I/O and OS integration make mocking difficult
-3. Real testing (actual installation) more valuable than mocked tests
-4. Single-user, solo developer workflow (no regression risk)
+**Core principle:** GSD optimizes for solo developer + Claude workflow. Testing serves to:
+- Catch incomplete implementations (stubs, TODOs, placeholders)
+- Verify file system state (directories created, files written)
+- Validate command execution (proper return codes, output format)
+- Gate critical operations until human verification
+- Provide confidence before merging to main
 
-**Real testing instead:**
-- Maintainers test locally before merging
-- Users test via `npm link` during development
-- CI validates Windows path handling in PR checks
-- Each release tested before publishing to npm
+**What's NOT tested:**
+- Individual helper functions (they're trivial)
+- Node.js builtin modules (fs, path, etc.)
+- npm packages (rely on their tests)
 
-## Testing Checkpoints in GSD Artifacts
+**What IS tested:**
+- End-to-end workflows (create-roadmap → plan-phase → execute-phase)
+- Installation across runtimes (Claude, OpenCode) and locations (global, local)
+- Phase state (ROADMAP.md, PLAN.md, SUMMARY.md artifacts created)
+- Verification gates (TODO comments flagged, stubs detected)
 
-While the GSD codebase itself has no tests, GSD is used to *manage* test-driven projects. Reference files for test-driven projects:
+---
 
-- `.planning/references/tdd.md` — TDD cycle (RED → GREEN → REFACTOR)
-- Test framework detection in other projects via `npm list jest` or `npm list vitest`
-- Phase discovery confirms test setup before planning
+## Test Organization
 
-## Continuous Integration
+### Test Files Location
 
-**GitHub Actions expected but not configured** (observed in `.github/` directory structure)
+Tests exist as shell scripts and verification workflows, not separate test files:
 
-GSD release process (from CONTRIBUTING.md):
+**Verification workflows:**
+- `get-shit-done/workflows/verify-phase.md` — Phase completion verification
+- `get-shit-done/references/verification-patterns.md` — Pattern detection guide
+
+**Hook tests (manual):**
+- Test paths with Windows backslashes: `bin/install.js` handles `C:\Users\...`
+- Test XDG compliance: OpenCode uses `~/.config/opencode/opencode.json`
+- Test config directory precedence: `CLAUDE_CONFIG_DIR` > `~/.claude`
+
+**Installation tests:**
+- Global install: `npx get-shit-done-cc --claude --global`
+- Local install: `npx get-shit-done-cc --claude --local`
+- OpenCode: `npx get-shit-done-cc --opencode --global`
+- Both runtimes: `npx get-shit-done-cc --both --global`
+- Uninstall: `npx get-shit-done-cc --claude --global --uninstall`
+
+### No Test Runner
+
+No Jest, Vitest, Mocha, or other test framework is configured. Instead:
+- Verification happens in running `npm test` (currently not configured but expected to run installation)
+- Phase verification uses bash script patterns in workflows
+- Acceptance is manual checkpoint gates
+
+---
+
+## Test Structure
+
+### Verification Workflow Pattern
+
+Location: `get-shit-done/workflows/verify-phase.md`
+
+Verification follows this structure for each phase:
+
+**1. Check for incomplete code:**
 ```bash
-npm version minor
-git add package.json CHANGELOG.md
-git commit -m "chore: release v1.10.0"
-git tag -a v1.10.0 -m "Release v1.10.0"
-git push origin main --tags
-npm publish
+# Look for stubs
+grep -c -E "TODO|FIXME|placeholder|not implemented" "$path"
+
+# Check for inline console.log
+grep -c "console\.log" "$file"
+
+# Search for empty implementations
+grep -E "return null|return \[\]|return {}" "$file"
 ```
 
-Pre-publish checklist (implicit):
-1. Manual local testing with `npm link`
-2. Test on Windows if touching paths
-3. Verify both Claude Code and OpenCode installation
-4. Check CHANGELOG.md updated
-5. Tag and publish
+**2. Check for comments:**
+```bash
+# TODO/FIXME detection
+grep -n -E "TODO|FIXME|XXX|HACK" "$file"
 
-## Verification Strategy
+# Output pattern (for tables)
+echo "| $file | $(line_number) | TODO/FIXME | ⚠️ Warning |"
+```
 
-**Install verification approach:**
+**3. Verify file structure:**
+```bash
+# Check if required files exist
+[ -f .planning/ROADMAP.md ] || exit 1
+[ -f .planning/phases/NN-name/PLAN.md ] || exit 1
+[ -f .planning/phases/NN-name/SUMMARY.md ] || exit 1
+```
 
+**4. Verify execution artifacts:**
+```bash
+# Check commit history
+git log --oneline | head -5
+
+# Verify phase directory
+ls -la .planning/phases/NN-name/
+```
+
+### Test Categories
+
+**Type 1: File existence checks**
+- Verify PLAN.md created
+- Verify SUMMARY.md created
+- Verify phase directory created
+- Verify CHANGELOG updated
+
+Pattern from `verify-phase.md`:
+```bash
+if [ ! -f ".planning/phases/$PHASE_NUM-$PHASE_SLUG/PLAN.md" ]; then
+  echo "ERROR: Plan not created"
+  exit 1
+fi
+```
+
+**Type 2: Content validation**
+- Detect TODO/FIXME comments (⚠️ warning)
+- Detect placeholder text
+- Detect stubs and incomplete functions
+- Check for excessive console.log (debugging leftover)
+
+Pattern:
+```bash
+stubs=$(grep -c -E "TODO|FIXME|placeholder|not implemented|coming soon" "$path")
+if [ "$stubs" -gt 0 ]; then
+  echo "⚠️ Warning: $stubs stubs found"
+fi
+```
+
+**Type 3: State verification**
+- ROADMAP.md contains all phases
+- STATE.md tracks progress
+- Git history has commits with correct format
+- Artifacts match expected structure
+
+**Type 4: Integration verification**
+- Phase execution completes without errors
+- Hooks installed correctly
+- Commands available in runtime (Claude/OpenCode)
+- Installation can be uninstalled cleanly
+
+---
+
+## Mocking
+
+**Pattern:** Not applicable to GSD's architecture
+
+GSD uses real file I/O and bash execution. "Mocking" happens through:
+- Checkpoints that pause execution for human review
+- Conditional logic based on file existence
+- Safe guards that prevent destructive operations
+
+Example from `bin/install.js` (verification before deletion):
 ```javascript
-// Function used after each component installation
+// Clean install: remove existing destination to prevent orphaned files
+if (fs.existsSync(destDir)) {
+  fs.rmSync(destDir, { recursive: true });
+}
+```
+
+Verification before use:
+```javascript
 function verifyInstalled(dirPath, description) {
   if (!fs.existsSync(dirPath)) {
-    console.error(`  ${yellow}✗${reset} Failed to install ${description}: directory not created`);
+    console.error(`  ${yellow}✗${reset} Failed to install ${description}`);
     return false;
   }
-  try {
-    const entries = fs.readdirSync(dirPath);
-    if (entries.length === 0) {
-      console.error(`  ${yellow}✗${reset} Failed to install ${description}: directory is empty`);
-      return false;
-    }
-  } catch (e) {
-    console.error(`  ${yellow}✗${reset} Failed to install ${description}: ${e.message}`);
-    return false;
-  }
+  // ... check contents
   return true;
 }
 ```
 
-**Failure collection:**
-- Tracks installation failures in `failures` array
-- Exits with error code 1 if any critical component fails (line 988)
-- Provides helpful message: `Try running directly: node ~/.npm/_npx/*/node_modules/get-shit-done-cc/bin/install.js --global`
+---
+
+## Fixtures and Test Data
+
+### Project Test Data
+
+For manual testing, create a test project:
+```bash
+mkdir test-gsd-project
+cd test-gsd-project
+npm link get-shit-done-cc
+
+# Test interactive mode
+npx get-shit-done-cc
+
+# Test specific runtimes
+npx get-shit-done-cc --claude --global
+npx get-shit-done-cc --opencode --global --config-dir ~/.opencode-test
+
+# Test local install
+npx get-shit-done-cc --claude --local
+```
+
+### Installation Cleanup
+
+After testing, verify cleanup works:
+```bash
+# Test uninstall
+npx get-shit-done-cc --claude --global --uninstall
+
+# Verify directories removed
+ls ~/.claude/commands/gsd/  # should not exist
+ls ~/.claude/get-shit-done/  # should not exist
+```
+
+---
 
 ## Coverage
 
-**No coverage tracking** (no coverage tool, no coverage reports)
+### What's Covered
 
-**Implicit coverage areas:**
-- Installation: 5+ code paths (interactive, flags, uninstall, both runtimes, custom config)
-- Path handling: ~20+ code branches (global/local, tilde expansion, OpenCode vs Claude)
-- JSON manipulation: settings read/write, hook registration cleanup
-- File operations: copy, delete, find, verify
+**Installation logic** (primary test surface):
+- Argument parsing (--global, --local, --uninstall, --config-dir)
+- Runtime selection (Claude, OpenCode, both)
+- Interactive prompts (TTY detection, readline handling)
+- Directory creation and file copying
+- Path replacement in markdown files
+- Settings.json hook configuration
+- Orphaned file cleanup
+- Permissions configuration (OpenCode)
 
-**Untested edge cases:**
-- Corrupted VERSION file
-- Out-of-disk during installation
-- Permission denied on config directory
-- Symlinks in installation path
-- Very long file paths (Windows limitations)
+**Command execution:**
+- Slash command parsing (`/gsd:command-name`)
+- Step execution order
+- Bash script execution and output capture
+- File references (`@.planning/PROJECT.md`)
+
+**Verification:**
+- TODO/FIXME comment detection
+- Stub identification (empty returns, placeholders)
+- State file validation
+
+### What's NOT Covered
+
+**Helper functions:**
+- `expandTilde()` — trivial string manipulation
+- `parseConfigDirArg()` — tested implicitly through arg parsing
+- `buildHookCommand()` — tested implicitly through installation
+
+**Node.js builtins:**
+- `fs.readFileSync()`, `fs.writeFileSync()` — rely on Node.js
+- `path.join()` — rely on Node.js
+- `child_process.spawn()` — tested implicitly through hook execution
+
+**No specific coverage targets** — GSD prioritizes end-to-end flow over unit test coverage
+
+---
+
+## Test Types
+
+### Installation Tests (Manual)
+
+**What:** Verify installation works across configurations
+
+**How:** Run install script with different flags
+
+**Test cases:**
+```bash
+# Test 1: Claude global install
+npx get-shit-done-cc --claude --global
+# Verify: ~/.claude/commands/gsd/ exists
+# Verify: ~/.claude/get-shit-done/ exists
+# Verify: ~/.claude/hooks/ has gsd-statusline.js and gsd-check-update.js
+
+# Test 2: OpenCode global install
+npx get-shit-done-cc --opencode --global
+# Verify: ~/.config/opencode/command/ has gsd-*.md files
+# Verify: ~/.config/opencode/opencode.json has permissions configured
+
+# Test 3: Local install
+npx get-shit-done-cc --claude --local
+# Verify: .claude/commands/gsd/ exists (local)
+# Verify: .claude/get-shit-done/ exists (local)
+
+# Test 4: Uninstall removes all GSD files
+npx get-shit-done-cc --claude --global --uninstall
+# Verify: ~/.claude/commands/gsd/ doesn't exist
+# Verify: ~/.claude/get-shit-done/ doesn't exist
+# Verify: ~/.claude/hooks/gsd-*.js removed
+# Verify: settings.json hooks cleaned up
+
+# Test 5: Windows path handling
+# Test with paths containing backslashes
+# Verify: Forward slashes used in Node.js calls
+```
+
+### Phase Execution Tests
+
+**What:** Verify phase planning and execution workflow
+
+**How:** Run `/gsd:plan-phase 1` and `/gsd:execute-phase 1` with test project
+
+**Test flow:**
+1. Create test project with PROJECT.md
+2. Create ROADMAP.md with phases
+3. Run `/gsd:plan-phase 1` → verify PLAN.md created
+4. Run `/gsd:execute-phase 1` → verify tasks created
+5. Complete tasks (manual or scripted)
+6. Run `/gsd:verify-phase 1` → check for stubs/TODOs
+
+### Verification Tests
+
+**What:** Detect incomplete/stub implementations
+
+**How:** Run bash patterns from `verify-phase.md`
+
+**Patterns tested:**
+```bash
+# Pattern 1: TODO/FIXME comments
+grep -E "TODO|FIXME|XXX|HACK" "$file"
+# Expected: Empty output after implementation
+
+# Pattern 2: Empty implementations
+grep "return null\|return \[\]\|return {}" "$file"
+# Expected: Only legitimate empty returns
+
+# Pattern 3: Placeholder text
+grep -i "placeholder\|not implemented\|coming soon" "$file"
+# Expected: Empty output
+
+# Pattern 4: Debug console.log
+grep "console\.log" "$file"
+# Expected: Empty (or explained in comments)
+```
+
+---
+
+## Common Test Patterns
+
+### Bash Validation Pattern
+
+Used in all command steps:
+```bash
+# Validation check
+[ -f .planning/PROJECT.md ] || {
+  echo "ERROR: PROJECT.md not found"
+  exit 1
+}
+
+# Result captured for use
+STATUS=$([ -f .planning/ROADMAP.md ] && echo "EXISTS" || echo "MISSING")
+```
+
+### File Verification Pattern
+
+Check before reading/modifying:
+```javascript
+// Read and validate
+if (!fs.existsSync(filePath)) {
+  console.error(`File not found: ${filePath}`);
+  process.exit(1);
+}
+
+// Parse with error handling
+try {
+  const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+} catch (e) {
+  console.error(`Failed to parse: ${e.message}`);
+  process.exit(1);
+}
+```
+
+### State Verification Pattern
+
+Check artifacts after execution:
+```bash
+# After creating roadmap
+[ -f .planning/ROADMAP.md ] || exit 1
+[ -f .planning/STATE.md ] || exit 1
+[ -d .planning/phases/01-name ] || exit 1
+
+# After executing phase
+[ -f .planning/phases/01-name/PLAN.md ] || exit 1
+[ -f .planning/phases/01-name/SUMMARY.md ] || exit 1
+[ -n "$(git log --oneline | head -1)" ] || exit 1
+```
+
+---
+
+## Regression Prevention
+
+### Code Review Checklist
+
+Before merging feature branches, verify:
+
+**From CONTRIBUTING.md:**
+- [ ] Follows GSD style (no enterprise patterns, no filler)
+- [ ] Updates CHANGELOG.md for user-facing changes
+- [ ] Doesn't add unnecessary dependencies
+- [ ] Works on Windows (test paths with backslashes)
+
+**Installation testing:**
+- [ ] Test `npx get-shit-done-cc --claude --global`
+- [ ] Test `npx get-shit-done-cc --opencode --global`
+- [ ] Test `npx get-shit-done-cc --local`
+- [ ] Test uninstall: `npx get-shit-done-cc --claude --global --uninstall`
+- [ ] Verify settings.json hooks cleaned up
+
+**Path handling:**
+- [ ] Use `path.join()` not string concatenation
+- [ ] Use forward slashes in Node.js commands
+- [ ] Test `~` expansion on Mac/Linux
+- [ ] Test `%USERPROFILE%` equivalent on Windows
+
+**Commands:**
+- [ ] No temporal language ("we changed", "previously")
+- [ ] No filler language ("let me", "basically")
+- [ ] Imperative voice ("do X", not "X should be done")
+
+---
+
+## Test Execution
+
+### How Tests Run
+
+**Manual installation testing:**
+```bash
+npm link
+npx get-shit-done-cc --help  # Verify help works
+npx get-shit-done-cc --claude --global  # Test installation
+```
+
+**Verification in phase:**
+```bash
+/gsd:verify-phase 1  # Runs bash patterns from verify-phase.md
+```
+
+**Expected output:**
+```
+Phase Verification Report
+========================
+
+[Files Created]
+✓ .planning/phases/01-name/PLAN.md
+✓ .planning/phases/01-name/SUMMARY.md
+✓ Commit history recorded
+
+[Code Quality]
+⚠️ Warning: 2 TODO comments found
+✓ No stubs detected
+✓ No console.log leftover
+
+[Summary]
+Status: ⚠️ Ready for review (minor warnings)
+```
+
+### Continuous Integration
+
+**Current:** No automated CI configured
+
+**Recommended CI checks (if adding):**
+- Syntax check: `node -c bin/install.js`
+- Path validation: Verify no hardcoded backslashes
+- YAML validation: Check command frontmatter
+- Installation test: Run `npm link && npx get-shit-done-cc --help`
+
+---
+
+## Best Practices for Testing
+
+### When Writing Tests
+
+1. **Test the interface, not implementation**
+   - Don't test `expandTilde()` internals
+   - Test that install script properly handles `~/.claude/` paths
+
+2. **Use bash exit codes**
+   - Exit 0 on success
+   - Exit 1 on failure
+   - Check with: `$?` or `|| exit 1`
+
+3. **Verify file state, not functions**
+   - Don't mock file I/O
+   - Actually create files and verify they exist
+   - Clean up after tests
+
+4. **Check both happy path and error cases**
+   - Test `--uninstall` removes files
+   - Test missing PROJECT.md fails validation
+   - Test invalid JSON fails gracefully
+
+### When Debugging Tests
+
+1. **Enable verbose output**
+   - Add `set -x` to bash scripts
+   - Use `console.log()` before throwing
+
+2. **Check file state**
+   ```bash
+   ls -la ~/.claude/
+   cat .planning/PLAN.md
+   git log --oneline
+   ```
+
+3. **Isolate the failure**
+   - Test specific flag combination
+   - Create minimal test project
+   - Run single step in isolation
+
+---
+
+## Acceptance Criteria
+
+A feature is considered "tested" when:
+
+- [ ] Installation succeeds across all runtime/location combinations
+- [ ] Uninstallation cleanly removes all GSD files
+- [ ] ROADMAP.md can be created and verified
+- [ ] Phase planning produces valid PLAN.md
+- [ ] Phase execution produces SUMMARY.md with commits
+- [ ] `/gsd:verify-phase` detects any incomplete code
+- [ ] Windows paths are handled correctly
+- [ ] No new TODO comments introduced without justification
+- [ ] Code follows GSD style (no enterprise patterns, imperative voice)
+- [ ] CHANGELOG.md updated for user-facing changes
+
+---
+
+## Summary
+
+GSD testing prioritizes:
+1. **Real file I/O** — Test against actual filesystem
+2. **End-to-end flows** — Verify complete workflows work
+3. **Verification gates** — Detect incomplete implementations
+4. **Multi-platform validation** — Test Windows/Mac/Linux paths
+5. **Manual checkpoints** — Human reviews for critical operations
+
+Testing is lightweight, focused, and integrated into the development workflow—no separate test suite to maintain.
 
 ---
 

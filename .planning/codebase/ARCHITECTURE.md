@@ -4,243 +4,204 @@
 
 ## Pattern Overview
 
-**Overall:** Multi-agent orchestration system with context-managed subagent spawning
+**Overall:** Command-Agent-Workflow meta-prompting system with orchestration, subagent delegation, and state management.
 
 **Key Characteristics:**
-- Single orchestrator coordinates specialized subagents via Task tool
-- Each agent writes output directly to disk (not back to orchestrator)
-- Agents have fresh context, preventing token contamination
-- Markdown-based workflows drive all execution flow
-- State management via `.planning/` directory with frontmatter-driven documents
-- Zero external dependencies (Node.js native only)
+- Orchestrator-subagent separation: Thin orchestrators coordinate, full-context subagents execute
+- Wave-based parallelization: Plans group by dependencies and execute in parallel waves
+- Prompt-as-code: PLAN.md, RESEARCH.md, and SUMMARY.md are executable prompts, not documents
+- Context preservation: STATE.md maintains project memory across sessions
+- Progressive disclosure: Commands → Workflows → Templates → References
 
 ## Layers
 
-**Presentation Layer - CLI Commands:**
-- Purpose: Entry points for user interaction via `/gsd:command` syntax
-- Location: `commands/gsd/`
-- Contains: 40+ command definitions (markdown files with YAML frontmatter)
-- Examples: `map-codebase.md`, `new-project.md`, `plan-phase.md`, `execute-phase.md`
-- Depends on: Orchestrator workflows, agents
-- Used by: Claude Code interface, user prompts
+**User Interface Layer (Commands):**
+- Purpose: Entry points for all user interactions
+- Location: `commands/gsd/*.md`
+- Contains: 35 command definitions with YAML frontmatter (name, description, allowed-tools)
+- Depends on: Workflows, templates, references
+- Used by: Claude Code / OpenCode interfaces
+- Pattern: Each command is thin wrapper delegating to workflow
 
-**Orchestration Layer - Workflow Controllers:**
-- Purpose: Coordinate multiagent execution, manage state transitions, handle retries
-- Location: `get-shit-done/workflows/`
-- Contains: 40+ workflow markdown files that implement command logic
-- Key workflows: `map-codebase.md`, `execute-phase.md`, `plan-phase.md`, `verify-phase.md`
-- Pattern: Step-based execution with bash commands, Task spawning, state management
-- Depends on: Agents, reference docs, validation libraries
-- Used by: Commands (called via execution_context)
+**Orchestration Layer (Workflows):**
+- Purpose: Coordinate complex multi-step processes
+- Location: `get-shit-done/workflows/*.md`
+- Contains: 20+ workflow definitions (execute-phase, plan-phase, research-phase, etc.)
+- Depends on: Agent specifications, references, lib files, templates
+- Used by: Commands (via execution_context @-references)
+- Pattern: Orchestrators parse input, validate state, spawn subagents, collect/aggregate results
 
-**Agent Layer - Specialized Executors:**
-- Purpose: Deep-focus analysis/implementation with autonomous decision making
-- Location: `agents/`
-- Contains: 11 agent definitions (markdown files with YAML frontmatter)
-- Key agents: `gsd-planner.md`, `gsd-executor.md`, `gsd-codebase-mapper.md`, `gsd-verifier.md`, `gsd-debugger.md`
-- Spawning: Via Task tool with `subagent_type` parameter
-- Pattern: Agents write documents directly to `.planning/` or `.planning/codebase/`
-- Depends on: Reference docs, codebase files, project state
-- Used by: Orchestrator workflows
+**Execution Layer (Agents):**
+- Purpose: Autonomous implementation of plans
+- Location: `agents/*.md` (11 agent specs)
+- Contains: gsd-executor, gsd-planner, gsd-verifier, gsd-debugger, and 7 others
+- Depends on: Project state, plans, research, references
+- Used by: Orchestrators via Task spawning
+- Pattern: Each agent loads full context fresh, handles single responsibility
 
-**Knowledge Base Layer - References:**
-- Purpose: Prescriptive guidance, patterns, schemas for agents and workflows
-- Location: `get-shit-done/references/`
-- Contains: 21 markdown files with patterns, schemas, guidelines
-- Examples: `verification-patterns.md`, `tdd.md`, `checkpoints.md`, `monorepo-patterns.md`
-- Pattern: Loaded via `@file` references in agent roles and workflow contexts
-- Used by: Agents (via frontmatter context), workflows
+**Knowledge Base Layer (References & Templates):**
+- Purpose: Reusable patterns and guidance documents
+- Location: `get-shit-done/references/*.md` (UI, principles, patterns, TDD, git, etc.)
+- Contains: UI-brand.md, verification-guide.md, model-profiles.md, checkpoints.md, etc.
+- Depends on: Nothing
+- Used by: Commands, workflows, agents via @-references
+- Pattern: @-references are lazy-loading signals, not pre-embedded content
 
-**Template Layer - Document Blueprints:**
-- Purpose: Pre-structured documents that agents and workflows populate
-- Location: `get-shit-done/templates/`
-- Contains: 37 markdown templates with YAML frontmatter
-- Sub-folders: `codebase/` (7 structure templates), `research-project/` (6 templates)
-- Usage: Copied and filled during workflow execution
-- Used by: Workflows (populate and write to `.planning/`)
-
-**Library Layer - Utilities:**
-- Purpose: Reusable analysis, validation, detection logic
-- Location: `get-shit-done/lib/`
-- Contains: 7 markdown files with domain-specific logic
-- Examples: `validate-config.md`, `failure-taxonomy.md`, `path-selection.md`
-- Pattern: Hand-rolled validation/analysis without external dependencies
-- Used by: Workflows, agents
-
-**Installation Layer:**
-- Purpose: Package distribution and runtime setup
-- Location: `bin/install.js`, `scripts/`, `hooks/`
-- Contains: Installation logic, statusline hooks, update checking
-- Pattern: Cross-platform path handling, Claude Code + OpenCode support
-- Used by: npm install process
+**Project State Layer:**
+- Purpose: Persist project context across sessions
+- Location: `.planning/` (created per-project)
+- Contains: PROJECT.md, ROADMAP.md, STATE.md, config.json, phases/
+- Depends on: Nothing
+- Used by: Orchestrators and executors
+- Pattern: Git-tracked memory system
 
 ## Data Flow
 
-**Project Initialization Flow:**
+**New Project Flow:**
 
 1. User runs `/gsd:new-project`
-2. `commands/gsd/new-project.md` (command) → `get-shit-done/workflows/new-project.md` (orchestrator)
-3. Orchestrator questions user, spawns `gsd-project-researcher` agent (if domain research needed)
-4. Outputs written: `.planning/PROJECT.md`, `.planning/REQUIREMENTS.md`, `.planning/ROADMAP.md`, `.planning/STATE.md`, `.planning/config.json`
+2. Orchestrator questions user (AskUserQuestion tools)
+3. Orchestrator spawns gsd-project-researcher for domain research (if needed)
+4. Orchestrator synthesizes to REQUIREMENTS.md
+5. Orchestrator spawns gsd-roadmapper to create ROADMAP.md
+6. Creates `.planning/` with PROJECT.md, ROADMAP.md, config.json, STATE.md
 
-**Codebase Analysis Flow:**
+**Plan Phase Flow:**
 
-1. User runs `/gsd:map-codebase [focus]` (focus: tech|arch|quality|concerns)
-2. `commands/gsd/map-codebase.md` → `get-shit-done/workflows/map-codebase.md`
-3. Orchestrator spawns 4 parallel `gsd-codebase-mapper` agents (one per focus area)
-4. Each mapper writes documents directly: `STACK.md`, `INTEGRATIONS.md`, `ARCHITECTURE.md`, `STRUCTURE.md`, `CONVENTIONS.md`, `TESTING.md`, `CONCERNS.md`
-5. Orchestrator collects confirmations (not content), verifies files exist
+1. User runs `/gsd:plan-phase [phase]`
+2. Orchestrator validates phase exists in ROADMAP.md
+3. If research needed: Spawns gsd-phase-researcher → produces RESEARCH.md
+4. Spawns gsd-planner with RESEARCH, PROJECT, REQUIREMENTS → produces PLAN.md files
+5. Spawns gsd-plan-checker with PLAN.md → verification loop (iterate until passes)
+6. Returns to user with plans ready to execute
 
-**Phase Planning Flow:**
+**Execute Phase Flow:**
 
-1. User runs `/gsd:plan-phase [n]`
-2. `commands/gsd/plan-phase.md` → `get-shit-done/workflows/plan-phase.md`
-3. Orchestrator loads `.planning/ROADMAP.md`, `.planning/codebase/` docs, relevant discovery docs
-4. Orchestrator spawns `gsd-planner` agent with loaded context
-5. Planner reads codebase docs, produces `PLAN.md` file to `.planning/phases/phase-N/`
-6. Orchestrator verifies plan, optionally routes to `gsd-plan-checker` for review
+1. User runs `/gsd:execute-phase [phase]`
+2. Orchestrator loads STATE.md (project memory)
+3. Orchestrator discovers all PLAN.md files in phase directory
+4. Orchestrator groups plans by `wave` frontmatter (dependency analysis)
+5. For each wave (sequentially):
+   - Spawn gsd-executor for each plan in wave (parallel Task calls)
+   - Wait for completion (Task blocks)
+   - Collect SUMMARY.md files
+6. Orchestrator spawns gsd-verifier for phase goal verification
+7. Orchestrator updates ROADMAP.md, STATE.md
+8. Returns completion report
 
-**Phase Execution Flow:**
+**State Management:**
 
-1. User runs `/gsd:execute-phase [n]`
-2. `commands/gsd/execute-phase.md` → `get-shit-done/workflows/execute-phase.md`
-3. Orchestrator loads `PLAN.md`, project state, codebase docs
-4. Orchestrator spawns `gsd-executor` agent
-5. Executor reads PLAN, implements tasks atomically:
-   - Create file(s) using Write tool
-   - Run bash commands using Bash tool
-   - Commit via git with per-task commits
-   - Handle checkpoints by returning structured pause message
-6. Executor writes `SUMMARY.md`, updates `STATE.md`
-7. Orchestrator collects summary, offers next steps
-
-**Verification Flow:**
-
-1. After execute completes, user runs `/gsd:verify-work`
-2. `commands/gsd/verify-work.md` → `get-shit-done/workflows/verify-phase.md`
-3. Orchestrator spawns `gsd-verifier` agent
-4. Verifier reads PLAN, tests against requirements, produces `VERIFICATION.md`
-5. If failures: Orchestrator routes to `gsd-debugger` or suggests `/gsd:plan-phase --gaps`
-
-## State Management
-
-**State Files in `.planning/`:**
-- `PROJECT.md` - Project vision, problem statement, scope
-- `REQUIREMENTS.md` - Feature requirements, acceptance criteria
-- `ROADMAP.md` - Phase breakdown and sequencing
-- `STATE.md` - Current position, accumulated decisions, blockers
-- `config.json` - Workflow preferences (mode, gates, safety, retry)
-
-**Phase-Specific State in `.planning/phases/phase-N/`:**
-- `PLAN.md` - Executable plan (frontmatter + objective + tasks)
-- `SUMMARY.md` - Execution summary (what was completed, commits made)
-- `VERIFICATION.md` - Test results, failures, acceptance status
-- `DISCOVERY.md` - Research findings (when research phase runs)
-
-**Codebase Knowledge in `.planning/codebase/`:**
-- `STACK.md` - Technology stack, versions, package manager
-- `INTEGRATIONS.md` - External services, APIs, authentication
-- `ARCHITECTURE.md` - System design patterns, layers, data flow
-- `STRUCTURE.md` - Directory layout, naming conventions, file placement
-- `CONVENTIONS.md` - Code style, naming, patterns
-- `TESTING.md` - Test framework, patterns, coverage
-- `CONCERNS.md` - Technical debt, bugs, performance issues
+- `STATE.md`: Project memory, current phase/plan, accumulated decisions
+- `config.json`: Workflow preferences (model_profile, verification enabled, retry settings)
+- `ROADMAP.md`: Phase structure, completion status
+- Git commits: Atomic record of each task completion (hash stored in SUMMARY.md)
 
 ## Key Abstractions
 
-**Agent Pattern:**
-- Purpose: Encapsulates specialized expertise (planning, execution, verification)
-- Examples: `gsd-planner.md`, `gsd-executor.md`, `gsd-verifier.md`
-- Pattern: Markdown file with YAML frontmatter defining role, tools, philosophy; body contains multi-step execution logic
-- Key property: Agents write output directly to prevent context bloat in orchestrator
+**Plan (PLAN.md):**
+- Purpose: Executable prompt for single feature/task
+- Examples: `phase/01-core-architecture/001-api-setup-PLAN.md`
+- Pattern: Frontmatter (phase, plan, type, wave, depends_on) + Objective + Context (@-refs) + Tasks + Verification
+- Characteristics: 2-3 tasks max (aggressive atomicity), contains verification criteria
 
-**Workflow Pattern:**
-- Purpose: Orchestrates steps, agents, state transitions
-- Examples: `execute-phase.md`, `plan-phase.md`
-- Pattern: Markdown with `<step name>` tags, bash commands, Task spawning
-- Key property: Workflows are controllers (call agents, manage state), not executors
+**Task:**
+- Purpose: Atomic unit of work
+- Pattern: `<task type="auto|checkpoint:human-verify|checkpoint:decision">`
+- Contains: files, action, verify, done criteria
+- Characteristics: Type determines autonomy (auto = fully autonomous, checkpoint = pause for user)
 
-**Command Pattern:**
-- Purpose: User-facing entrypoints
-- Examples: `map-codebase.md`, `new-project.md`
-- Pattern: Markdown with frontmatter (name, description, allowed-tools), contains objective + execution_context
-- Key property: Commands reference workflows (via @path in execution_context)
+**Summary (SUMMARY.md):**
+- Purpose: Proof of execution
+- Pattern: Frontmatter (phase, plan, completed_tasks with hashes, duration)
+- Contains: Task results, deviations, verification proof
+- Characteristics: Machine-readable frontmatter enables dependency resolution
 
-**Task Spawn Pattern:**
-- Purpose: Create subagent with fresh context
-- Pattern: Task tool with `subagent_type`, `model`, prompt context
-- Key property: Subagent output goes to filesystem, orchestrator gets confirmation only
+**Checkpoint:**
+- Purpose: User interaction point (after automation completes)
+- Types: checkpoint:human-verify (verify work), checkpoint:decision (choose path), checkpoint:human-action (rare)
+- Pattern: Executor STOPS at checkpoint, returns structured message, fresh continuation agent resumes
+- Characteristics: Automation-first (only checkpoint what couldn't be automated)
 
-**Frontmatter Pattern:**
-- Purpose: Metadata for execution control and planning
-- Used in: Commands, agents, workflows, templates
-- Fields: name, description, tools, color, phase, type, waves, depends_on, user_setup
-- Pattern: YAML between `---` delimiters
+**Wave:**
+- Purpose: Parallelization group
+- Pattern: Plan frontmatter `wave: N`
+- Characteristics: Plans in same wave execute in parallel, next wave waits for completion
+- Usage: Orchestrator groups plans, spawns parallel Tasks per wave
+
+**Research (RESEARCH.md):**
+- Purpose: Domain knowledge before planning
+- Pattern: Produced by gsd-phase-researcher
+- Characteristics: Answers "what should we build", not "how should we build"
+- Used by: gsd-planner to derive task lists
 
 ## Entry Points
 
-**CLI Entry Point:**
+**`bin/install.js`:**
 - Location: `bin/install.js`
-- Triggers: `npx get-shit-done-cc` or direct file invocation
-- Responsibilities: Interactive/non-interactive installation, path resolution, settings.json configuration
+- Triggers: `npx get-shit-done-cc` (npm install)
+- Responsibilities: Parse install flags (--claude, --opencode, --global, --local), copy commands/agents to appropriate directories, create .claude/rules/ for auto-loading
 
-**Command Entry Points:**
-- Location: `commands/gsd/` (Claude Code) or flattened as `command/gsd-*.md` (OpenCode)
-- Triggers: User types `/gsd:command` in Claude Code interface
-- Pattern: Command file references workflow file via `execution_context`
-- Examples: `/gsd:new-project`, `/gsd:plan-phase`, `/gsd:execute-phase`
+**`commands/gsd/help.md`:**
+- Location: `commands/gsd/help.md`
+- Triggers: `/gsd:help`
+- Responsibilities: List all 35 available commands, route to specific help
 
-**Workflow Entry Point:**
-- Location: `get-shit-done/workflows/`
-- Triggers: Referenced by command via `execution_context: @path`
-- Pattern: Multi-step orchestration with bash commands and Task spawning
-- Responsibilities: Step coordination, state management, agent orchestration
+**`commands/gsd/new-project.md`:**
+- Location: `commands/gsd/new-project.md`
+- Triggers: `/gsd:new-project`
+- Responsibilities: Initialize .planning/, run questioning, create PROJECT.md, ROADMAP.md
 
-**Agent Entry Point:**
-- Location: `agents/`
-- Triggers: Spawned by orchestrator via Task tool with `subagent_type`
-- Pattern: Autonomous execution with exploration loop → analysis → document output
-- Responsibilities: Deep work (planning, executing, verifying, debugging)
+**`commands/gsd/plan-phase.md`:**
+- Location: `commands/gsd/plan-phase.md`
+- Triggers: `/gsd:plan-phase [phase]`
+- Responsibilities: Spawn gsd-phase-researcher (if needed), spawn gsd-planner, iterate with gsd-plan-checker
+
+**`commands/gsd/execute-phase.md`:**
+- Location: `commands/gsd/execute-phase.md`
+- Triggers: `/gsd:execute-phase [phase]`
+- Responsibilities: Orchestrate wave-based execution, spawn gsd-executor per plan, handle checkpoints, verify phase goal
 
 ## Error Handling
 
-**Strategy:** Multi-layer with escalation
+**Strategy:** Automatic deviation handling, checkpoint gates, retry orchestration, state recovery
 
-**Layer 1 - CLI Installation:**
-- Errors in `bin/install.js`: Early termination with error message
-- Validation: Path existence, JSON syntax, file permissions
-- Recovery: User re-runs with corrected arguments
+**Patterns:**
 
-**Layer 2 - Workflow Validation:**
-- Errors in step execution: Bash command failures caught, logged to stderr
-- Validation: State file existence, config schema correctness
-- Recovery: Retry step, suggest debug command, escalate to debugger agent
-
-**Layer 3 - Agent Execution:**
-- Errors during agent work: Try/catch patterns in agent prompts
-- Validation: File write success, bash exit codes, verification criteria
-- Recovery: Handle deviations in executor, log to attempts-log, escalate to debugger
-
-**Layer 4 - Retry Orchestration:**
-- Workflow: `retry-orchestration.md` handles plan failures
-- Strategy: Identify failure class (verification, execution, integration), select retry path
-- Options: Retry same plan, invoke debugger, create gap-closure plan
+- **Auto-fixes:** gsd-executor automatically handles authentication errors, missing files, test failures (RULEs 1-9 in agent spec)
+- **Checkpoints:** Plans with `checkpoint:*` type pause execution for user verification or decision
+- **Retry:** If retry enabled in config.json, gsd-executor escalates failures to retry-orchestration.md workflow
+- **State recovery:** STATE.md loaded first; if execution interrupted, fresh executor continues from completed_tasks
+- **Verification loop:** gsd-plan-checker iterates with gsd-planner until plans pass or max iterations (prevents bad plans from executing)
 
 ## Cross-Cutting Concerns
 
-**Logging:** Markdown-based event logs stored in `.planning/` (attempts-log.md, regression-log.md)
+**Logging:**
+- Framework: console output (no structured logging framework)
+- Pattern: Orchestrators report "about to spawn", "awaiting completion"; executors report "executing task N", completion, commits
+- Visibility: User sees orchestrator context only, subagent context hidden
 
-**Validation:** Hand-rolled schema validation in `lib/validate-config.md` without external dependencies
+**Validation:**
+- Phase existence: Orchestrator checks ROADMAP.md matches requested phase
+- Plan validity: Orchestrator checks PLAN.md frontmatter, verifies wave dependencies
+- Task structure: gsd-executor validates <task> XML structure before execution
+- State consistency: gsd-executor loads STATE.md, verifies accumulated decisions apply
 
-**Authentication:** None internally; external service auth via environment variables (Stripe, Supabase, etc. via INTEGRATIONS.md)
+**Authentication:**
+- Claude Code: Installed to `~/.claude/` or project `.claude/` via bin/install.js
+- OpenCode: Installed to `~/.config/opencode/` (XDG Base Directory spec)
+- Environment variables: CLAUDE_CONFIG_DIR, OPENCODE_CONFIG_DIR, OPENCODE_CONFIG (checked in order)
 
-**Authorization:** None; single-user system (solo developer + Claude)
+**Git Integration:**
+- Atomic commits: One per task (hash stored in SUMMARY.md)
+- Commit format: `{type}({phase}-{plan}): {description}` (feat, fix, test, refactor, docs, chore)
+- State commits: Orchestrator commits ROADMAP.md, STATE.md changes with "docs(state): update"
+- Co-Author: All commits include `Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>`
 
-**Context Management:** Documents written directly to `.planning/` to prevent context bloat; agents receive only necessary references via `@file` syntax
-
-**State Persistence:** All state in git-committed `.planning/` directory; no external databases
-
-**Idempotency:** Tasks designed for re-execution; file writes include safeguards (read before write, diff checking)
+**Context Management:**
+- Quality degradation: Claude degrades at 70%+ context usage
+- Plan atomicity: 2-3 tasks maximum per plan to stay within 50% budget
+- Wave parallelization: Multiple plans execute in parallel to reduce total session time
+- Fresh subagents: Each agent spawned with full context, orchestrator stays lean
 
 ---
 

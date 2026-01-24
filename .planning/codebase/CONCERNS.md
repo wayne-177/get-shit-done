@@ -4,189 +4,196 @@
 
 ## Tech Debt
 
-**Monolithic installer script:**
-- Issue: Single 1,292-line Node.js file handles all installation complexity (`bin/install.js`). Complex logic includes YAML frontmatter conversion, path resolution, hook registration, environment variable expansion, and cross-runtime support (Claude Code + OpenCode).
-- Files: `bin/install.js`
-- Impact: Difficult to test individual installation steps; changes to install logic risk breaking both Claude Code and OpenCode installations across Windows/Mac/Linux; new runtime support requires modifying large entrypoint file.
-- Fix approach: Extract logical concerns into smaller modules: path resolution (`lib/paths.js`), frontmatter conversion (`lib/converter.js`), hook registration (`lib/hooks.js`), environment setup (`lib/env.js`). Use dependency injection to test each module independently.
+**Fork Divergence and Update Safety:**
+- Issue: This codebase is a fork with agentic additions merged from `wayne-177/get-shit-done-agentic`, but the `/gsd:update` command still runs `npx get-shit-done-cc@latest` from upstream npm, which would overwrite local modifications
+- Files: `commands/gsd/update.md`, `hooks/gsd-check-update.js`
+- Impact: Running `/gsd:update` silently wipes 30+ custom workflows and 8+ commands that are not in upstream. Users lose data without warning
+- Fix approach: Either (1) disable update checking in forks, (2) add explicit confirmation dialog showing what would be lost, or (3) provide fork-aware version checking that compares against local package.json instead of npm registry
 
-**Large agent files with multiple responsibilities:**
-- Issue: Agents span 700-1,400 lines each and combine multiple concerns. Example: `agents/gsd-planner.md` (1,386 lines) handles multi-plan generation, constraint checking, workload analysis, and subagent orchestration; `agents/gsd-debugger.md` (1,203 lines) handles failure analysis, debugging strategies, and checkpoint generation.
-- Files: `agents/gsd-planner.md`, `agents/gsd-debugger.md`, `agents/gsd-verifier.md` (778 lines)
-- Impact: Hard to modify agent behavior without affecting other logic; testing specific workflows requires reading entire file; future agent enhancements risk scope creep.
-- Fix approach: Extract orthogonal concerns into separate agent files or reusable workflow modules (e.g., constraint checking as separate workflow, workload analysis as separate workflow). Use cross-references instead of inline logic.
+**Large Agent Files Approach Context Limits:**
+- Issue: Several agent files exceed 1,300 lines (`gsd-planner.md` at 1,386 lines, `gsd-debugger.md` at 1,203 lines)
+- Files: `agents/gsd-planner.md`, `agents/gsd-debugger.md`, `agents/gsd-executor.md`
+- Impact: Difficult to modify, refactor, or test individual concerns within these agents. At >1000 lines, single-file agents become monoliths that violate separation of concerns
+- Fix approach: Split large agents into smaller specialized agents or move common logic to reusable `.planning/lib/` files. For example, `gsd-planner.md` could delegate phase research to `gsd-phase-researcher.md`
 
-**Codebase Intelligence System removed but patterns remain:**
-- Issue: Version 1.9.2 removed the entire Codebase Intelligence System due to overengineering (21MB sql.js dependency, 3,065 lines added). However, references to deprecated system may linger and removal was not comprehensive cleanup.
-- Files: CHANGELOG.md (v1.9.2), agents/, workflows/
-- Impact: Risk of incomplete removal leaving orphaned code paths or configuration; future developers might attempt to re-implement removed features without understanding why they were deprecated.
-- Fix approach: Run comprehensive audit: search for SQLite imports, graph database references, entity file generation patterns; verify all intel hooks (gsd-intel-index.js, gsd-intel-session.js, gsd-intel-prune.js) are permanently removed; document deprecation rationale in README to prevent re-introduction.
+**Hardcoded Directory Assumptions:**
+- Issue: Installation scripts and hooks assume `.claude` directory structure hardcoded in multiple places. For OpenCode, code still references both `~/.config/opencode` and `~/.opencode` in different places
+- Files: `bin/install.js` (lines 12, 16-17, 64, 88, 186-190), `hooks/gsd-check-update.js` (lines 12, 16-17), `hooks/gsd-statusline.js` (lines 46, 64)
+- Impact: Custom config directories are partially supported (via `--config-dir`) but paths are still scattered across codebase. If users relocate config, some hooks may fail
+- Fix approach: Create `lib/paths.js` that exports config directory resolution functions, use it consistently across all files. This eliminates path hardcoding duplication
 
-**Hardcoded timeout values without configuration:**
-- Issue: Timeout values hardcoded throughout workflows. Example: `timeout: 30000` in `analyze-tech-debt.md` (120s knip timeout), `timeout 120` in shell commands; retry logic caps at 3 attempts in `retry-orchestration.md`.
-- Files: `get-shit-done/workflows/analyze-tech-debt.md`, `get-shit-done/workflows/retry-orchestration.md`, `get-shit-done/workflows/adaptive-failure-analysis.md`
-- Impact: Large projects may timeout on analysis; network-heavy operations fail unexpectedly; users cannot override timeouts for slow environments.
-- Fix approach: Extract timeout values to `config.json` with sensible defaults; add timeout calculation based on project size (line count, file count); document timeout override mechanism in GSD-STYLE.md.
-
-**Manual changelog management:**
-- Issue: CHANGELOG.md follows Keep a Changelog format but is manually maintained. Version bumps done via `npm version` command require separate CHANGELOG updates; risk of version/changelog skew.
-- Files: `CHANGELOG.md`, `package.json`
-- Impact: Changelog can become out-of-sync with actual releases; contributors might forget to update; releasing requires multiple manual steps (npm version, edit CHANGELOG, commit, tag, publish).
-- Fix approach: Automate changelog generation from conventional commits on release. Use `conventional-changelog` or similar to extract feat/fix/breaking from git log; maintain unreleased section automatically; make npm publish script update CHANGELOG before tagging.
+**No Centralized Error Handling:**
+- Issue: Hooks silently fail with `catch (e) {}` blocks (`gsd-check-update.js`, `gsd-statusline.js`). Installation failure handling prints to stderr/stdout but doesn't log to persistent location
+- Files: `bin/install.js` (line 812), `hooks/gsd-check-update.js` (lines 41, 46), `hooks/gsd-statusline.js` (lines 58, 71, 81)
+- Impact: Users cannot debug why updates aren't checking or statusline isn't showing. Errors are swallowed silently
+- Fix approach: Create `lib/logging.js` that writes to `~/.claude/logs/gsd-*.log`. Log all hook operations and errors there instead of to console
 
 ## Known Bugs
 
-**Installation on non-TTY terminals:**
-- Symptoms: Interactive installation fails silently on CI/CD or headless environments (WSL2, SSH, etc.).
-- Files: `bin/install.js` (lines 1096-1130 where readline is created)
-- Trigger: Running `npx get-shit-done-cc` without stdin available or in non-interactive context
-- Workaround: Use explicit flags (`--global --claude` or `--both --opencode`) to skip interactive prompts; v1.6.4 fixes WSL2 issue but edge cases remain for truly headless environments.
-- Status: Fixed in v1.6.4 but may regress if new interactive features added.
+**Statusline Context Window Display Edge Case:**
+- Symptoms: Context window percentage can show >100% if `remaining_percentage` is negative or malformed
+- Files: `hooks/gsd-statusline.js` (lines 24-25)
+- Trigger: When context window data contains NaN or negative remaining_percentage values
+- Workaround: None - status line will display incorrect percentage but won't crash
+- Root cause: `Math.max(0, Math.min(100, 100 - rem))` clamps output but `rem` can be undefined, leading to `100 - undefined = NaN`
 
-**OpenCode command path structure incompatibility:**
-- Symptoms: OpenCode users see incorrect command paths in documentation and help text (e.g., `/gsd:help` shown instead of `/gsd-help`).
-- Files: `bin/install.js` (line 281: command conversion), documentation files
-- Trigger: Installation creates flat command structure but docs reference colon-based paths
-- Workaround: Users must know to use dash-based paths (`/gsd-help` not `/gsd:help`); no help system guides them to correct syntax.
-- Current mitigation: Frontmatter converter in `bin/install.js` replaces `/gsd:` with `/gsd-` in content (lines 280-281).
+**Installation Race Condition on Windows:**
+- Symptoms: When installing globally on Windows during a Claude Code session, hooks directory may be locked by running processes
+- Files: `bin/install.js` (lines 966-981)
+- Trigger: Running installer while Claude Code has sessions active, hooks are being read
+- Workaround: Close all Claude Code instances before installing
+- Root cause: No file lock detection or retry logic in `fs.copyFileSync()` calls
 
-**Phase directory matching edge case:**
-- Symptoms: Phase detection fails when folder names use different zero-padding (e.g., `05-phase` vs `5-phase`).
-- Files: Orchestrator and workflow path resolution (affected across multiple workflows)
-- Trigger: Renaming phase directories or using non-standard numbering
-- Workaround: Stick to consistent zero-padded naming (01-, 02-, etc. or 1-, 2-)
-- Status: Fixed in v1.5.28 but pattern matching remains fragile.
-
-**Windows UNC path handling:**
-- Symptoms: Installation fails on Windows with UNC paths (network shares like `\\server\share`)
-- Files: `bin/install.js` (path resolution sections)
-- Trigger: Installing from network drive on Windows
-- Workaround: Copy GSD to local drive before installing; v1.9.5 improved handling but edge cases may remain.
+**Version File Not Guaranteed to Exist:**
+- Symptoms: Update checker silently fails if VERSION file doesn't exist at either location
+- Files: `hooks/gsd-check-update.js` (lines 34-40)
+- Trigger: Clean installation or manual file deletion
+- Workaround: Reinstall GSD
+- Root cause: No fallback to package.json version as last resort
 
 ## Security Considerations
 
-**Secrets in environment variables:**
-- Risk: Installer reads and propagates environment variables including API keys and credentials. If Claude Code/OpenCode crashes or leaks context, secrets in settings could be exposed.
-- Files: `bin/install.js` (env var handling), `get-shit-done/workflows/` (env var usage)
-- Current mitigation: `.env` files are read but not stored in config; secrets passed via environment only; `.gitignore` includes `.env` files; installer validates env var names before using them.
-- Recommendations: Document that only users with access to machine should run install; add warning about storing secrets in shared config directories; validate that sensitive env vars (API_KEY, TOKEN, SECRET) are never written to JSON config files.
+**JSON.parse() Without Validation in Hooks:**
+- Risk: `gsd-statusline.js` parses stdin JSON without schema validation. If malformed input is sent, unexpected values propagate
+- Files: `hooks/gsd-statusline.js` (line 15)
+- Current mitigation: Try-catch block silently fails (line 81)
+- Recommendations:
+  1. Add strict object shape validation (`if (!data.model || typeof data.model !== 'object')`)
+  2. Create `.planning/lib/types.js` with TypeScript-style validators for stdin schemas
+  3. Log parsing errors to persistent log file instead of silent fail
 
-**Hook command injection:**
-- Risk: statusline hook runs shell commands from settings.json. If settings file is corrupted or user has malicious config, arbitrary commands could execute.
-- Files: `bin/install.js` (hook registration), `hooks/gsd-statusline.js`
-- Current mitigation: Hooks are registered by installer only; settings.json validated before use (line 207-211 try/catch); hook commands built with proper escaping.
-- Recommendations: Add hook command validation whitelist; escape all hook command arguments; document that settings.json should not be manually edited; add integrity check for settings.json on startup.
+**execSync() Without Timeout or Bounds:**
+- Risk: `gsd-check-update.js` calls `npm view get-shit-done-cc version` with 10-second timeout. Network failures or npm registry slowness could still block statusline
+- Files: `hooks/gsd-check-update.js` (line 45)
+- Current mitigation: 10-second timeout is specified
+- Recommendations:
+  1. Reduce timeout to 5 seconds (npm registry should respond in <1 second normally)
+  2. Add explicit network error handling and fallback to cached version if fetch fails
+  3. Cache results for 24 hours instead of checking every session
 
-**Package dependency supply chain:**
-- Risk: Only two dependencies: esbuild (dev-only) and zero production dependencies. Minimal risk, but installers copies entire GSD codebase into user's config directory without verification.
-- Files: `package.json`, `bin/install.js`
-- Current mitigation: No production dependencies reduces attack surface; npm integrity checks via package-lock.json; GSD source is open-source and auditable on GitHub.
-- Recommendations: Document that users should review GSD codebase before installing; add checksum verification option for installed files; implement npm audit pre-install check.
+**File Path Traversal Risk in Frontmatter Conversion:**
+- Risk: `bin/install.js` processes path references with regex replacements that don't validate results. Malicious frontmatter could construct paths like `../../sensitive`
+- Files: `bin/install.js` (lines 274-371)
+- Current mitigation: Source files come from trusted npm package
+- Recommendations:
+  1. Validate all replacement paths with `path.resolve()` and ensure they're within expected directories
+  2. Add unit tests for path replacement with adversarial inputs
 
 ## Performance Bottlenecks
 
-**Knip static analysis timeout on large projects:**
-- Problem: Dead code detection using knip can timeout on codebases >10k files or with complex dependencies. Hard-coded 120-second timeout (line 162 in `analyze-tech-debt.md`) may be insufficient.
-- Files: `get-shit-done/workflows/analyze-tech-debt.md` (line 162)
-- Cause: Knip must parse entire project dependency graph; projects with circular dependencies or complex monorepos hit timeout.
-- Current workaround: Workflow catches timeout, reports empty results, and notes limitation (line 638).
-- Improvement path: Make timeout dynamic based on project size; allow skipping dead code analysis for large projects; run knip with `--strict` to fail fast on issues.
+**Synchronous File Reads in Statusline:**
+- Problem: `gsd-statusline.js` does synchronous file I/O (`fs.readdirSync`, `fs.statSync`, `fs.readFileSync`) which blocks hook execution
+- Files: `hooks/gsd-statusline.js` (lines 48-60, 65-72)
+- Cause: Statusline is called every keystroke/model response. With large todos directories (100+ files), directory scan takes milliseconds
+- Improvement path:
+  1. Cache todo file metadata for 5 minutes instead of scanning on every keystroke
+  2. Use async file I/O but return cached result immediately
+  3. Limit directory scan to last 10 modified files instead of all files
 
-**Context window bloat in large workflows:**
-- Problem: Workflows like `execute-plan.md` (1,844 lines) and `understand-goal.md` (1,028 lines) fully inline without references. When Claude loads these, full file content occupies context.
-- Files: `get-shit-done/workflows/execute-plan.md`, `get-shit-done/workflows/understand-goal.md`, and others
-- Cause: Markdown files designed to be self-contained; no lazy-loading or references system.
-- Current workaround: Orchestrators selectively load workflows; only relevant workflow is inlined in agent prompts.
-- Improvement path: Extract reusable sub-workflows into separate files; use `@file` references in prompts to lazy-load only needed sections; cache frequently-used workflow sections.
+**Background Process Management:**
+- Problem: `gsd-check-update.js` spawns Node process every session via `spawn()`. With thousands of users, this creates many orphaned processes on slow systems
+- Files: `hooks/gsd-check-update.js` (lines 25-59)
+- Cause: `child.unref()` releases parent but child still runs
+- Improvement path:
+  1. Check cache age before spawning: only spawn if cache is >1 hour old
+  2. Write PID file to prevent concurrent checks
+  3. Use `timeout` command on Unix to prevent runaway processes
 
-**Multi-agent orchestration serializes dependent tasks:**
-- Problem: Retry orchestration workflow (lines 65-76) processes retries serially: analyze failure → select strategy → execute → check → repeat. If a strategy takes 5 minutes, user waits 15+ minutes for 3 attempts before escalation.
-- Files: `get-shit-done/workflows/retry-orchestration.md`
-- Cause: Orchestration pattern prioritizes safety over speed; no parallelization of independent retry strategies.
-- Improvement path: Allow parallel retry strategy execution for stateless tasks; add timeout escalation (give up after N minutes even if attempts remain); provide progress feedback to user during retries.
-
-**Checkpoint resolution blocks workflow:**
-- Problem: Workflows pause execution at checkpoints waiting for user input. Long checkpoints (multi-step verification) can delay phase completion by hours.
-- Files: `get-shit-done/references/checkpoints.md`
-- Current mitigation: Design pattern emphasizes automating verification before checkpoint (Claude starts dev server, runs tests, etc.); checkpoints are for human judgment only.
-- Improvement path: Add async checkpoint callback; allow users to check status without blocking; provide estimated wait time for complex verifications.
+**Installation Directory Traversal:**
+- Problem: `bin/install.js` recursively copies entire `agents/` directory with in-memory path replacement on every file
+- Files: `bin/install.js` (lines 905-940)
+- Cause: No parallel processing, no streaming file copies
+- Improvement path: For large installations (100+ agents), batch file copies or use `cp -r` shell command with post-processing instead
 
 ## Fragile Areas
 
-**Frontmatter YAML parsing:**
-- Files: `bin/install.js` (lines 274-365: convertClaudeToOpencodeFrontmatter function)
-- Why fragile: Simple regex-based YAML parser doesn't handle edge cases: multi-line values, escaped quotes, non-ASCII characters, inline YAML arrays with complex syntax.
-- Safe modification: Add proper YAML parser (js-yaml library); validate all parsed fields before use; add test cases for complex frontmatter examples.
-- Test coverage: No tests for frontmatter conversion; edge cases like `allowed-tools: [AskUserQuestion, "Tool With Spaces"]` likely break.
+**Frontmatter Conversion Logic:**
+- Files: `bin/install.js` (lines 224-371)
+- Why fragile: Line-by-line YAML parsing is brittle. Complex frontmatter with:
+  - Nested objects (`metadata: { key: value }`)
+  - Comments (`# comment after value`)
+  - Multi-line strings (YAML `|` blocks)
+  - Mixed tool formats (some `allowed-tools:`, some `tools:`)
 
-**File copying and directory traversal:**
-- Files: `bin/install.js` (lines 403-461: copyFlattenedCommands and copyDirectory functions)
-- Why fragile: Recursive directory copy without symlink handling, permission preservation, or atomic operations. If copy fails mid-way, partial installation left in place.
-- Safe modification: Use `fs-extra` or similar for robust copy; implement atomic copy (copy to temp dir, then rename); add pre-flight checks to verify source exists and has required permissions.
-- Test coverage: Manual testing only; untested on Windows with symlinks or permission-restricted directories.
+  Will either fail silently or produce invalid output
+- Safe modification: Add YAML parser library (js-yaml) instead of regex/line parsing. Update `package.json` dependencies
+- Test coverage: No tests for edge cases like multiline descriptions or nested config
 
-**Hook registration in settings.json:**
-- Files: `bin/install.js` (lines 1001-1025: SessionStart hook registration)
-- Why fragile: Assumes specific settings.json structure; mutating settings deeply without validation; if hooks array corrupted, all hooks lose functionality.
-- Safe modification: Use JSON schema validation before mutating; implement atomic updates (write to temp file, validate, then replace); add rollback capability if mutation fails.
-- Test coverage: Not tested; untested on corrupted settings.json files or concurrent installations.
+**Hook Command Registration in settings.json:**
+- Files: `bin/install.js` (lines 991-1026)
+- Why fragile: Code assumes specific hook structure in settings.json (SessionStart array with hooks array). If Claude Code changes settings.json format or adds nested validation, installation breaks silently
+- Common failures: Users with custom hook configurations lose them during upgrade because cleanup logic (lines 506-527) may over-match patterns
+- Safe modification: Only add/remove specific hook entries by UUID/command pattern, don't wipe entire SessionStart array
+- Test coverage: No integration tests with real Claude Code settings files
 
-**Regex-based command path conversion:**
-- Files: `bin/install.js` (lines 277-283: command path replacements)
-- Why fragile: Simple global regex replacements can over-match. Example: `/gsd:` replacement matches in documentation links, comments, and command definitions; could replace `/gsd:help-command` in URLs incorrectly.
-- Safe modification: Parse frontmatter properly; only replace in specific fields (name, description); use word boundaries in regex; add test cases with edge cases.
+**Installation Verification Logic:**
+- Files: `bin/install.js` (lines 800-816)
+- Why fragile: `verifyInstalled()` only checks directory existence and entry count. Doesn't verify:
+  - Files have correct content
+  - Permissions are readable
+  - Symlinks are valid (on Unix)
 
-## Missing Critical Features
+  Installation could appear successful but fail at runtime
+- Safe modification: Add checksum validation (`md5(file) === expected`) for critical files
+- Test coverage: No regression tests for corrupted installations
 
-**No automated rollback on failed installs:**
-- Problem: If installation fails mid-way, GSD files partially installed but old version still in use. User has corrupted state.
-- Blocks: Clean recovery from failed installs; users must manually uninstall and reinstall.
-- Current workaround: `--uninstall` flag available to clean state; v1.6.1 improved cleanup but doesn't handle partial state.
-- Improvement path: Implement atomic install (stage in temp directory, validate complete, then swap); add rollback trigger if installation incomplete after timeout.
+## Scaling Limits
 
-**No build-time integrity verification:**
-- Problem: Users run `npx get-shit-done-cc` without verifying package integrity. npm package could be tampered with between download and install.
-- Blocks: Users can't verify they're running authentic GSD.
-- Current mitigation: Source is open-source on GitHub; npm publish requires auth; package-lock.json provides reproducibility.
-- Improvement path: Add code signing (sign release tarballs with maintainer key); provide checksum verification command; integrate with npm audit security tooling.
+**Single Cache File for Update Checks:**
+- Current capacity: Unlimited sessions share one `~/.claude/cache/gsd-update-check.json` file
+- Limit: If multiple Claude Code sessions write simultaneously, race condition corrupts cache file
+- Scaling path: Use file locking (flock on Unix, LockFile on Windows) or write-to-temp + rename pattern
 
-**No automated upgrade rollback:**
-- Problem: If new version has bugs, users manually downgrade by re-running old version or editing package.json.
-- Blocks: Fast recovery from bad releases; no automatic rollback path.
-- Current workaround: Changelog shows breaking changes; users must read before upgrading.
-- Improvement path: Keep previous version installed; add `/gsd:rollback` command to restore prior version; implement canary release testing before major releases.
+**Todos Directory Scan in Statusline:**
+- Current capacity: Scales linearly with number of todo files (typically <100)
+- Limit: With 1000+ todo files (large projects with many sessions), statusline scan becomes noticeable (>50ms)
+- Scaling path: Index todo files by session ID in separate subdirectories, or use SQLite instead of filesystem enumeration
 
-**No installation health check:**
-- Problem: After install completes, no verification that all files copied correctly or hooks registered properly.
-- Blocks: Silent failures if installation incomplete; users discover issues only when running commands.
-- Current mitigation: Installation shows checkmarks for each step (lines 856-989) but doesn't verify end-to-end functionality.
-- Improvement path: Add `/gsd:verify-install` command that checks: all command files present, hooks registered in settings, Claude/OpenCode config accessible, sandbox permissions correct.
+## Dependencies at Risk
+
+**No Production Dependencies:**
+- Risk: Package has zero dependencies (by design). But build system needs esbuild (dev dependency) to work. If esbuild disappears or breaks, build fails
+- Impact: Cannot produce dist/ hooks without esbuild
+- Migration plan: Add `postinstall` script that regenerates hooks, or commit pre-built hooks to git
+
+**Node.js Version Requirement:**
+- Risk: Codebase specifies `"engines": { "node": ">=16.7.0" }` but code uses modern JavaScript (const, arrow functions, nullish coalescing)
+- Impact: Works on Node 16.7.0 but not older versions. Constraint is loose (could be >=16.14.0 safely)
+- Migration plan: Test on Node 16.7.0 to confirm, or bump minimum to 16.14.0 and document requirement
 
 ## Test Coverage Gaps
 
-**Installation logic untested:**
-- What's not tested: Core installation workflows, path resolution across OS, frontmatter conversion, hook registration, settings mutation, multi-runtime installation.
-- Files: `bin/install.js` (no test file exists)
-- Risk: Installation is critical path; bugs affect all users; no regression tests prevent re-introduction of fixed bugs.
-- Priority: High — installation is most common user interaction; bugs here block entire workflow.
+**Installation Flow Not Tested End-to-End:**
+- What's not tested: Full interactive installation flow across platforms (Windows with WSL2, macOS with custom config dirs, Linux with XDG)
+- Files: `bin/install.js`, `commands/gsd/*.md`, agents
+- Risk: Bugs in installation only discovered after users report issues (happened with WSL2 in v1.6.4)
+- Priority: High - installation is critical path. Breaking it blocks all usage
 
-**Converter edge cases untested:**
-- What's not tested: Frontmatter conversion with complex YAML, tool name mapping edge cases, command path replacement in URLs vs. commands, color name to hex conversion.
-- Files: `bin/install.js` (lines 274-365)
-- Risk: OpenCode users may have broken commands if frontmatter conversion fails silently.
-- Priority: High — affects OpenCode user experience.
+**Hook Behavior Not Tested Across Context States:**
+- What's not tested: Statusline behavior with:
+  - Missing todos directory
+  - Corrupted todo JSON files
+  - Context window at exactly 100% / 0%
+  - Very long task names (>80 characters)
+  - Rapid successive calls (stress test)
+- Files: `hooks/gsd-statusline.js`, `hooks/gsd-check-update.js`
+- Risk: Edge cases silently fail, users see blank statusline without knowing why
+- Priority: High - statusline is visible every interaction
 
-**Hook registration untested:**
-- What's not tested: Duplicate hook detection, corrupted settings.json handling, concurrent hook registrations, hook removal on uninstall.
-- Files: `bin/install.js` (lines 1001-1025, 651-663)
-- Risk: Hooks may not fire or may fire multiple times if registration broken; uninstall may leave orphaned hooks.
-- Priority: Medium — affects statusline and update checks but not core functionality.
+**OpenCode Compatibility Not Verified:**
+- What's not tested: Actual OpenCode installation and command execution with converted frontmatter
+- Files: `bin/install.js` (frontmatter conversion), `agents/`, `commands/`
+- Risk: OpenCode support added in v1.9.6 but only tested with regex replacements, not actual OpenCode runtime
+- Priority: Medium - affects new users choosing OpenCode, but smaller user base than Claude Code
 
-**Adapter pattern for multi-runtime support untested:**
-- What's not tested: Installation differences between Claude Code and OpenCode; config directory detection; path escaping on Windows; XDG spec compliance for OpenCode.
-- Files: `bin/install.js` (getGlobalDir, getOpencodeGlobalDir functions)
-- Risk: OpenCode users may have installation failures if config directory detection broken; Windows users may have path escaping issues.
-- Priority: High — affects subset of users but failures are complete install failures.
+**Cleanup Logic for Orphaned Files Not Regression Tested:**
+- What's not tested: Installing v1.9.13 over previous broken installs. Cleanup (lines 476-534) only tests specific filenames, doesn't handle:
+  - Custom user files accidentally in GSD directories
+  - Files from future versions (backward compatibility)
+  - Permission errors during deletion
+- Files: `bin/install.js` (cleanupOrphanedFiles, cleanupOrphanedHooks)
+- Risk: Cleanup silently fails, leaving corrupt state for next upgrade
+- Priority: Medium - affects upgrade path, impacts each user ~quarterly
 
 ---
 
