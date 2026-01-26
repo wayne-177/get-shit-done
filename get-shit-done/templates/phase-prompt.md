@@ -290,6 +290,44 @@ See `/Users/macuser/.claude/get-shit-done/references/tdd.md` for TDD plan struct
 
 ---
 
+## Interface Verification (CRITICAL)
+
+**When tasks depend on external interfaces (database schemas, APIs, types), include verification in the task.**
+
+**Pattern:** List interface source files in `<files>`, include "read and verify" in `<action>`.
+
+```xml
+<task type="auto">
+  <name>Task 1: Add tag association to prompt</name>
+  <files>
+    src-tauri/src/database/migrations.rs,  <!-- VERIFY: schema source of truth -->
+    src/lib/queries/tagQueries.ts           <!-- WRITE: code that uses schema -->
+  </files>
+  <action>
+    1. Read migrations.rs to verify prompt_tags table structure
+    2. Note actual columns (may differ from assumed)
+    3. Write INSERT/SELECT matching ACTUAL columns, not assumed ones
+  </action>
+  <verify>Query executes without "no column named X" errors</verify>
+  <done>Tag association created using correct schema</done>
+</task>
+```
+
+**Why this is critical:** Code compiles against assumed interfaces but fails at runtime. The planner may assume a schema has columns `id, created_at` when it actually only has `prompt_id, tag_id`. Without verification, the executor writes invalid SQL that fails only when the user tests.
+
+**Interface types requiring verification:**
+
+| Interface | Source of truth | Common failure |
+|-----------|-----------------|----------------|
+| Database tables | migrations.rs, schema.prisma | Wrong column names |
+| Rust commands | #[tauri::command] functions | Wrong parameter types |
+| API endpoints | Route handlers | Wrong request/response shape |
+| Type definitions | .ts/.rs type files | Missing or renamed fields |
+
+**Rule:** If a task writes code that depends on an interface defined elsewhere, the `<files>` list MUST include that interface's source file.
+
+---
+
 ## Examples
 
 **Autonomous parallel plan:**

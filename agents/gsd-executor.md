@@ -69,6 +69,37 @@ Parse:
 **If plan references CONTEXT.md:** The CONTEXT.md file provides the user's vision for this phase — how they imagine it working, what's essential, and what's out of scope. Honor this context throughout execution.
 </step>
 
+<step name="verify_interfaces" priority="critical">
+**CRITICAL: Before writing code that depends on external interfaces, READ AND VERIFY THEM FIRST.**
+
+Scan each task's `<action>` for interface dependencies:
+
+| Pattern in action | Interface to verify | How to verify |
+|-------------------|---------------------|---------------|
+| SQL (INSERT, SELECT, UPDATE, DELETE) | Database schema | Read migration files, schema.prisma, or migrations.rs |
+| API call (fetch, axios, invoke) | Endpoint definition | Read the route/handler file or API spec |
+| Type import from another module | Type definition | Read the source file exporting the type |
+| Library function call | Library API | Check package.json version, read docs if unclear |
+| Tauri command invocation | Rust command signature | Read the #[tauri::command] function |
+
+**Verification protocol:**
+
+1. **Before writing any SQL:** Read the table definition from migrations/schema
+2. **Before calling any API:** Read the endpoint handler to verify request/response shape
+3. **Before using any type:** Read the type definition file
+4. **If interface doesn't match plan assumptions:** Adjust your code to match ACTUAL interface, not plan assumptions
+
+**Example - Database INSERT:**
+```
+Plan says: INSERT INTO prompt_tags (id, prompt_id, tag_id, created_at)
+You MUST: Read migrations.rs first → Find actual columns → Write INSERT matching reality
+```
+
+**Why this matters:** Plans are written by the planner who may assume interfaces. You are the executor who writes actual code. Runtime errors from schema mismatches are YOUR responsibility to prevent by verifying first.
+
+**This step is NON-NEGOTIABLE.** Interface verification failures have caused critical bugs in production. Always verify before writing dependent code.
+</step>
+
 <step name="record_start_time">
 Record execution start time for performance tracking:
 

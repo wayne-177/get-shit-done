@@ -6,6 +6,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+- **CRITICAL: Interface verification requirement** - Plans and executors now require verifying database schemas, API interfaces, and type definitions BEFORE writing dependent code. Previously, planners could assume interface structures that didn't match reality, causing runtime failures (e.g., INSERT statements with non-existent columns). Fix adds:
+  - `plan-phase.md`: Interface verification guidance in task breakdown step
+  - `gsd-executor.md`: New `verify_interfaces` step (priority: critical)
+  - `phase-prompt.md`: Interface verification section with examples
+
 ## [1.9.12] - 2025-01-23
 
 ### Removed

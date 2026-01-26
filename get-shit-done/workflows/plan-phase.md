@@ -267,6 +267,33 @@ See `~/.claude/get-shit-done/references/tdd.md` for TDD plan structure.
 **Critical:** If external resource has CLI/API (Vercel, Stripe, etc.), use type="auto" to automate. Only checkpoint for verification AFTER automation.
 
 See ~/.claude/get-shit-done/references/checkpoints.md for checkpoint structure.
+
+**CRITICAL: Interface verification requirement**
+
+For tasks that write code depending on external interfaces (database schemas, APIs, types), the `<action>` MUST include a verification step BEFORE writing code:
+
+| Task involves | Must read first |
+|---------------|-----------------|
+| SQL queries (INSERT, SELECT, etc.) | Migration files, schema definitions |
+| API/service calls | Endpoint definitions, service interfaces |
+| Type usage from other modules | Type definition files |
+| Library/package usage | Installed version in package.json/Cargo.toml |
+| Function calls to other modules | Function signatures in source files |
+
+**Bad task action (assumes interface):**
+```
+Write INSERT INTO prompt_tags (id, prompt_id, tag_id, created_at)...
+```
+
+**Good task action (verifies interface):**
+```
+1. Read src-tauri/src/database/migrations.rs to verify prompt_tags table columns
+2. Write INSERT statement matching ACTUAL schema columns
+```
+
+**Why this matters:** Code written against assumed interfaces compiles but fails at runtime. The executor cannot catch schema mismatches if the plan doesn't include verification. This has caused critical bugs where INSERT statements referenced non-existent columns.
+
+Include interface source files in the task's `<files>` list so executor reads them.
 </step>
 
 <step name="estimate_scope">
