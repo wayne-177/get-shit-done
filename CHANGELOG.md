@@ -7,6 +7,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Fixed
+- **CRITICAL: Requirements verification requirement** - Tasks now require verifying requirement satisfaction LITERALLY before completion. Previously, tasks could be marked complete while only partially satisfying requirements (e.g., "search by name or content" implemented only name search). Fix adds:
+  - `gsd-executor.md`: New `verify_requirement_coverage` step (priority: critical) - parses requirement text literally, verifies ALL parts satisfied
+  - `plan-phase.md`: Requirements traceability requirement - tasks must map to requirements with full coverage
+  - `gsd-verifier.md`: Literal requirement testing in Step 6 - tests requirements as written, not as interpreted
+  - `phase-prompt.md`: Requirements Traceability section with parsing rules and examples
+
 - **CRITICAL: Interface verification requirement** - Plans and executors now require verifying database schemas, API interfaces, and type definitions BEFORE writing dependent code. Previously, planners could assume interface structures that didn't match reality, causing runtime failures (e.g., INSERT statements with non-existent columns). Fix adds:
   - `plan-phase.md`: Interface verification guidance in task breakdown step
   - `gsd-executor.md`: New `verify_interfaces` step (priority: critical)

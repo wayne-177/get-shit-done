@@ -328,6 +328,55 @@ See `/Users/macuser/.claude/get-shit-done/references/tdd.md` for TDD plan struct
 
 ---
 
+## Requirements Traceability (CRITICAL)
+
+**Every task MUST map to specific requirement(s) and satisfy them COMPLETELY.**
+
+**Pattern:** Include `requires:` in task metadata, parse requirement text literally.
+
+```xml
+<task type="auto" requires="STOR-05">
+  <name>Task 1: Implement full-text search</name>
+  <files>src/lib/queries/searchQueries.ts</files>
+  <action>
+    REQUIREMENT: "User can search prompts by name or content"
+    PARSE: "name OR content" = BOTH must be searchable
+
+    1. Create FTS5 table for prompt name/description
+    2. Add LIKE query for message content (or separate FTS)
+    3. Combine results from BOTH sources
+    4. Test: search "test" finds prompt named "test" ✓
+    5. Test: search "{{name}}" finds prompt with that in content ✓
+  </action>
+  <verify>
+    - Search by name returns results
+    - Search by content (message text) returns results
+    - BOTH work, not just one
+  </verify>
+  <done>Search satisfies full requirement: name AND content searchable</done>
+</task>
+```
+
+**Why this is critical:** Requirements use precise language. "Search by name or content" means BOTH must work. Without explicit requirement parsing in the task, the executor may implement only part (e.g., FTS on name only, missing content). The task completes successfully while the requirement remains unsatisfied.
+
+**Requirement parsing rules:**
+
+| Word | Meaning | Task must... |
+|------|---------|--------------|
+| "or" | All options available | Implement ALL options |
+| "and" | All parts present | Implement ALL parts |
+| "by X" | Specific method | Use that method |
+| "including" | Non-exhaustive | At minimum those items |
+
+**Common failures:**
+- "search by name or content" → only name searched (content missing)
+- "create and delete" → only create implemented (delete missing)
+- "filter by tag" → tag displayed but doesn't filter (verb missing)
+
+**Rule:** Every task's `<action>` should quote the requirement text and explicitly note which parts it covers. The `<verify>` must test EACH part of the requirement, not just the implementation.
+
+---
+
 ## Examples
 
 **Autonomous parallel plan:**

@@ -367,7 +367,9 @@ verify_state_render_link() {
 }
 ```
 
-## Step 6: Check Requirements Coverage
+## Step 6: Check Requirements Coverage (LITERAL VERIFICATION)
+
+**CRITICAL: Test requirements AS WRITTEN, not as interpreted.**
 
 If REQUIREMENTS.md exists and has requirements mapped to this phase:
 
@@ -377,15 +379,69 @@ grep -E "Phase ${PHASE_NUM}" .planning/REQUIREMENTS.md 2>/dev/null
 
 For each requirement:
 
-1. Parse requirement description
-2. Identify which truths/artifacts support it
-3. Determine status based on supporting infrastructure
+1. **Parse requirement text LITERALLY** - exact words matter
+2. **Identify keywords** that define scope:
+   - "or" → ALL options must work (not "either/or")
+   - "and" → ALL parts must exist
+   - "by X" → Must use that specific method
+   - "including" → At minimum those items
+
+3. **Test EACH component** of the requirement against codebase
+
+**Requirement literal verification protocol:**
+
+```bash
+verify_requirement_literally() {
+  local req_text="$1"
+
+  # Example: "User can search prompts by name or content"
+
+  # Step 1: Parse components
+  # "search" = functionality
+  # "by name" = must search name
+  # "or content" = must ALSO search content (or = both needed)
+
+  # Step 2: Verify each component
+  # Check 1: Is there search functionality?
+  grep -r "search\|MATCH\|LIKE" src/ --include="*.ts"
+
+  # Check 2: Does it search name?
+  grep -E "name.*search|search.*name|fts.*name" src/ --include="*.ts"
+
+  # Check 3: Does it search content?
+  grep -E "content.*search|search.*content|message.*search" src/ --include="*.ts"
+
+  # ALL checks must pass for requirement to be SATISFIED
+}
+```
+
+**Example verifications:**
+
+| Requirement | How to verify literally |
+|-------------|------------------------|
+| "search by name or content" | Find search code, verify it queries BOTH name AND content |
+| "create and delete tags" | Find create mutation, find delete mutation, both must exist |
+| "filter by date range" | Find filter code, verify it accepts start AND end date |
+| "export as PDF, CSV, or JSON" | Find export code, verify ALL THREE formats work |
+
+**DO NOT accept partial satisfaction:**
+
+```
+Requirement: "User can search prompts by name or content"
+Search implementation only indexes name/description.
+Content (message text) is NOT searched.
+
+WRONG: "Search exists" → SATISFIED ✓
+CORRECT: "Search exists but doesn't include content" → FAILED ✗
+```
 
 **Requirement status:**
 
-- ✓ SATISFIED: All supporting truths verified
-- ✗ BLOCKED: One or more supporting truths failed
-- ? NEEDS HUMAN: Can't verify requirement programmatically
+- ✓ SATISFIED: ALL parts of requirement verified in codebase
+- ✗ FAILED: One or more parts missing (even if others work)
+- ? NEEDS HUMAN: Can't verify programmatically (visual, UX, etc.)
+
+**Why this matters:** Requirements use precise language intentionally. "Search by name or content" means BOTH must work. Previous gaps occurred because verifier checked "search exists" not "search includes content". Literal verification catches these gaps.
 
 ## Step 7: Scan for Anti-Patterns
 

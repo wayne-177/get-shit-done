@@ -100,6 +100,54 @@ You MUST: Read migrations.rs first → Find actual columns → Write INSERT matc
 **This step is NON-NEGOTIABLE.** Interface verification failures have caused critical bugs in production. Always verify before writing dependent code.
 </step>
 
+<step name="verify_requirement_coverage" priority="critical">
+**CRITICAL: Before marking any task complete, verify it satisfies its mapped requirement(s) LITERALLY.**
+
+Tasks in PLAN.md should have `requires:` field listing requirement IDs they satisfy. For each task:
+
+1. **Find the requirement text** in REQUIREMENTS.md or plan context
+2. **Parse requirement literally** - note exact words like "or", "and", "all", "any"
+3. **Verify EACH part** of the requirement is satisfied
+
+**Requirement parsing examples:**
+
+| Requirement text | What to verify |
+|------------------|----------------|
+| "search by name **or** content" | BOTH name search AND content search work |
+| "user can create **and** delete" | BOTH create AND delete functionality exist |
+| "supports PNG, JPG, **and** GIF" | ALL THREE formats work, not just one |
+| "filter by tag" | Filter actually filters, not just displays |
+
+**Verification protocol:**
+
+1. **Read requirement text exactly as written** (not paraphrased in task)
+2. **Identify keywords:** or/and = ALL parts needed, any = at least one
+3. **Test each component:** If "name or content", test name search, then test content search
+4. **Only mark complete when ALL parts satisfied**
+
+**Example - Search requirement:**
+```
+Requirement: "User can search prompts by name or content"
+
+WRONG verification:
+  - FTS5 table created ✓
+  - Task complete ✓
+  - BUT: FTS5 only indexes name, not content!
+
+CORRECT verification:
+  1. Read requirement: "name or content" = BOTH must work
+  2. Test name search: FTS5 MATCH on name ✓
+  3. Test content search: ... content column not in FTS5!
+  4. FAIL - requirement not satisfied, fix before marking complete
+```
+
+**If task doesn't cite requirements:** Check ROADMAP.md phase description for implicit requirements. Apply same literal verification.
+
+**Why this matters:** Requirements state what users need. Tasks implement pieces. Without literal verification, tasks can be "complete" while requirements remain unsatisfied. This gap has caused critical bugs where explicit requirements were missed.
+
+**This step is NON-NEGOTIABLE.** Requirement verification failures have caused repeated user-facing bugs. Always verify requirement text literally before marking tasks complete.
+</step>
+
 <step name="record_start_time">
 Record execution start time for performance tracking:
 

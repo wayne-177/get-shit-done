@@ -294,6 +294,44 @@ Write INSERT INTO prompt_tags (id, prompt_id, tag_id, created_at)...
 **Why this matters:** Code written against assumed interfaces compiles but fails at runtime. The executor cannot catch schema mismatches if the plan doesn't include verification. This has caused critical bugs where INSERT statements referenced non-existent columns.
 
 Include interface source files in the task's `<files>` list so executor reads them.
+
+**CRITICAL: Requirements traceability requirement**
+
+Each task MUST map to specific requirements and cover them COMPLETELY:
+
+1. **Identify requirements** for this phase from REQUIREMENTS.md or ROADMAP.md
+2. **Map each task** to the requirement(s) it satisfies using `requires:` field
+3. **Verify task covers FULL requirement text** - not a paraphrase
+
+**Requirement parsing rules:**
+
+| Word in requirement | Meaning | Task must... |
+|---------------------|---------|--------------|
+| "or" | ALL options needed | Implement BOTH/ALL options |
+| "and" | ALL parts needed | Implement BOTH/ALL parts |
+| "by X" | Method specified | Use that specific method |
+| "including" | Non-exhaustive list | Implement at least those items |
+
+**Bad task (partial coverage):**
+```markdown
+Requirement: "User can search prompts by name or content"
+Task: "Create FTS5 search on prompts table"
+Problem: Task only mentions prompts table, not content. Executor may only index name/description.
+```
+
+**Good task (full coverage):**
+```markdown
+Requirement: "User can search prompts by name or content"
+Task: "Create search covering name AND message content"
+- FTS5 for prompt name/description
+- LIKE or FTS for message.content column
+- Combine results from both sources
+requires: [STOR-05]
+```
+
+**Why this matters:** Requirements use precise language ("or" means "either/both work"). Tasks that paraphrase requirements often drop parts. The executor then implements the task correctly but misses requirement coverage. Explicit mapping with full coverage ensures no gaps.
+
+Add `requires: [REQ-ID, ...]` field to each task's frontmatter or action section.
 </step>
 
 <step name="estimate_scope">
