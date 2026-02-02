@@ -26,11 +26,11 @@ This milestone ports high-value upstream v1.11.1 changes and fixes user autonomy
   3. Revision loop preserves user decisions — re-planning after checker rejection does not lose CONTEXT.md content
   4. Context bar shows 100% (red) when Claude Code hits its 80% context limit, with color thresholds adjusted for scaled display
   5. Both CONTEXT.md and {phase}-CONTEXT.md file naming patterns are detected and loaded
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md — Port CONTEXT.md flow to plan-phase.md (Step 4 loading + all 4 agent prompts)
+- [ ] 01-02-PLAN.md — Add Dimension 7 to plan checker + scale context bar display
 
 ### Phase 2: User Autonomy
 **Goal**: Users control framework behavior through config toggles rather than being overridden by hardcoded directives
