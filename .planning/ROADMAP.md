@@ -60,7 +60,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Add branching_strategy enum to config template, validation, and settings UI
+- [x] 03-01-PLAN.md — Add branching_strategy enum to config template, validation, and settings UI
 - [ ] 03-02-PLAN.md — Add branch creation logic to execute-phase, new-milestone, and complete-milestone
 
 ## Progress
@@ -72,4 +72,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Context Flow & Display | 2/2 | Complete | 2026-02-02 |
 | 2. User Autonomy | 2/2 | Complete | 2026-02-02 |
-| 3. Git Branching | 0/TBD | Not started | - |
+| 3. Git Branching | 1/2 | In progress | - |
