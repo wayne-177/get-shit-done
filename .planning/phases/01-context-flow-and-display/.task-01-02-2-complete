@@ -1,0 +1,21 @@
+Task 2 of plan 01-02 completed successfully
+
+Modified: /Users/macuser/.claude/hooks/gsd-statusline.js
+Changes:
+- Added scaling formula: (rawUsed / 80) * 100 to show 100% at 80% real usage
+- Renamed 'used' to 'rawUsed' for raw percentage calculation
+- Applied Math.min(100, ...) to cap displayed percentage at 100%
+- Updated color thresholds: 63%, 81%, 95% (adjusted from 50%, 65%, 80%)
+- Added comments explaining scaling rationale and real percentage equivalents
+
+Verification:
+✓ rawUsed variable exists with raw percentage calculation
+✓ used variable applies scaling formula (rawUsed / 80) * 100
+✓ Math.min(100, ...) caps the result
+✓ Color thresholds are 63, 81, 95
+✓ Comments reference "~50% real", "~65% real", "~76% real"
+✓ Test 80% real → 100% displayed (red with skull)
+✓ Test 20% real → 25% displayed (green)
+✓ Test 50% real → 63% displayed (yellow boundary)
+
+Completed: 2026-02-02
