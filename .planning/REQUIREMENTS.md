@@ -9,18 +9,18 @@ Requirements for milestone v1.1. Each maps to roadmap phases.
 
 ### Context Flow
 
-- [ ] **CTXF-01**: CONTEXT.md from discuss-phase loads in plan-phase Step 4 before agent spawning
-- [ ] **CTXF-02**: Phase researcher receives CONTEXT.md with decision/discretion/deferred instructions
-- [ ] **CTXF-03**: Planner receives CONTEXT.md with locked/discretion/out-of-scope classification
-- [ ] **CTXF-04**: Plan checker receives CONTEXT.md for compliance validation
-- [ ] **CTXF-05**: Revision loop receives CONTEXT.md to preserve user decisions during revisions
-- [ ] **CTXF-06**: Plan checker validates plans against user decisions (Dimension 7: Context Compliance)
-- [ ] **CTXF-07**: Context file detection handles both `CONTEXT.md` and `{phase}-CONTEXT.md` patterns
+- [x] **CTXF-01**: CONTEXT.md from discuss-phase loads in plan-phase Step 4 before agent spawning
+- [x] **CTXF-02**: Phase researcher receives CONTEXT.md with decision/discretion/deferred instructions
+- [x] **CTXF-03**: Planner receives CONTEXT.md with locked/discretion/out-of-scope classification
+- [x] **CTXF-04**: Plan checker receives CONTEXT.md for compliance validation
+- [x] **CTXF-05**: Revision loop receives CONTEXT.md to preserve user decisions during revisions
+- [x] **CTXF-06**: Plan checker validates plans against user decisions (Dimension 7: Context Compliance)
+- [x] **CTXF-07**: Context file detection handles both `CONTEXT.md` and `{phase}-CONTEXT.md` patterns
 
 ### Context Display
 
-- [ ] **CTXD-01**: Context bar shows 100% when hitting Claude Code's 80% limit (scaled display)
-- [ ] **CTXD-02**: Color thresholds adjusted for scaled display (green < 63%, yellow < 81%, orange < 95%, red >= 95%)
+- [x] **CTXD-01**: Context bar shows 100% when hitting Claude Code's 80% limit (scaled display)
+- [x] **CTXD-02**: Color thresholds adjusted for scaled display (green < 63%, yellow < 81%, orange < 95%, red >= 95%)
 
 ### User Autonomy
 
@@ -67,15 +67,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CTXF-01 | Phase 1 | Pending |
-| CTXF-02 | Phase 1 | Pending |
-| CTXF-03 | Phase 1 | Pending |
-| CTXF-04 | Phase 1 | Pending |
-| CTXF-05 | Phase 1 | Pending |
-| CTXF-06 | Phase 1 | Pending |
-| CTXF-07 | Phase 1 | Pending |
-| CTXD-01 | Phase 1 | Pending |
-| CTXD-02 | Phase 1 | Pending |
+| CTXF-01 | Phase 1 | Complete |
+| CTXF-02 | Phase 1 | Complete |
+| CTXF-03 | Phase 1 | Complete |
+| CTXF-04 | Phase 1 | Complete |
+| CTXF-05 | Phase 1 | Complete |
+| CTXF-06 | Phase 1 | Complete |
+| CTXF-07 | Phase 1 | Complete |
+| CTXD-01 | Phase 1 | Complete |
+| CTXD-02 | Phase 1 | Complete |
 | AUTO-01 | Phase 2 | Pending |
 | AUTO-02 | Phase 2 | Pending |
 | AUTO-03 | Phase 2 | Pending |

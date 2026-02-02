@@ -10,7 +10,7 @@ This milestone ports high-value upstream v1.11.1 changes and fixes user autonomy
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Context Flow & Display** - CONTEXT.md reaches all downstream agents; context bar displays correctly
+- [x] **Phase 1: Context Flow & Display** - CONTEXT.md reaches all downstream agents; context bar displays correctly
 - [ ] **Phase 2: User Autonomy** - Framework guardrails become configurable, user overrides respected
 - [ ] **Phase 3: Git Branching** - Branch strategy configurable and executed per phase/milestone
 
@@ -29,8 +29,8 @@ This milestone ports high-value upstream v1.11.1 changes and fixes user autonomy
 **Plans**: 2 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Port CONTEXT.md flow to plan-phase.md (Step 4 loading + all 4 agent prompts)
-- [ ] 01-02-PLAN.md — Add Dimension 7 to plan checker + scale context bar display
+- [x] 01-01-PLAN.md — Port CONTEXT.md flow to plan-phase.md (Step 4 loading + all 4 agent prompts)
+- [x] 01-02-PLAN.md — Add Dimension 7 to plan checker + scale context bar display
 
 ### Phase 2: User Autonomy
 **Goal**: Users control framework behavior through config toggles rather than being overridden by hardcoded directives
@@ -70,6 +70,6 @@ Phases execute in numeric order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Context Flow & Display | 0/TBD | Not started | - |
+| 1. Context Flow & Display | 2/2 | Complete | 2026-02-02 |
 | 2. User Autonomy | 0/TBD | Not started | - |
 | 3. Git Branching | 0/TBD | Not started | - |
