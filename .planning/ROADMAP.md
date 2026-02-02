@@ -12,7 +12,7 @@ This milestone ports high-value upstream v1.11.1 changes and fixes user autonomy
 
 - [x] **Phase 1: Context Flow & Display** - CONTEXT.md reaches all downstream agents; context bar displays correctly
 - [x] **Phase 2: User Autonomy** - Framework guardrails become configurable, user overrides respected
-- [ ] **Phase 3: Git Branching** - Branch strategy configurable and executed per phase/milestone
+- [x] **Phase 3: Git Branching** - Branch strategy configurable and executed per phase/milestone
 
 ## Phase Details
 
@@ -61,7 +61,7 @@ Plans:
 
 Plans:
 - [x] 03-01-PLAN.md — Add branching_strategy enum to config template, validation, and settings UI
-- [ ] 03-02-PLAN.md — Add branch creation logic to execute-phase, new-milestone, and complete-milestone
+- [x] 03-02-PLAN.md — Add branch creation logic to execute-phase, new-milestone, and complete-milestone
 
 ## Progress
 
@@ -72,4 +72,4 @@ Phases execute in numeric order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. Context Flow & Display | 2/2 | Complete | 2026-02-02 |
 | 2. User Autonomy | 2/2 | Complete | 2026-02-02 |
-| 3. Git Branching | 1/2 | In progress | - |
+| 3. Git Branching | 2/2 | Complete | 2026-02-02 |

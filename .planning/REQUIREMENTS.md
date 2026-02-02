@@ -33,11 +33,11 @@ Requirements for milestone v1.1. Each maps to roadmap phases.
 
 ### Git Branching
 
-- [ ] **GITB-01**: `/gsd:settings` shows branching strategy question (none/phase/milestone)
-- [ ] **GITB-02**: Config stores `git.branching_strategy` value
-- [ ] **GITB-03**: Phase execution creates branch `gsd/phase-{N}-{slug}` when strategy is "phase"
-- [ ] **GITB-04**: Milestone execution creates branch `gsd/{version}-{slug}` when strategy is "milestone"
-- [ ] **GITB-05**: Squash merge option available at milestone completion (if upstream implementation found)
+- [x] **GITB-01**: `/gsd:settings` shows branching strategy question (none/phase/milestone)
+- [x] **GITB-02**: Config stores `git.branching_strategy` value
+- [x] **GITB-03**: Phase execution creates branch `gsd/phase-{N}-{slug}` when strategy is "phase"
+- [x] **GITB-04**: Milestone execution creates branch `gsd/{version}-{slug}` when strategy is "milestone"
+- [x] **GITB-05**: Squash merge option available at milestone completion (documented as manual workaround)
 
 ## v2 Requirements
 
@@ -82,11 +82,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTO-04 | Phase 2 | Complete |
 | AUTO-05 | Phase 2 | Complete |
 | AUTO-06 | Phase 2 | Complete |
-| GITB-01 | Phase 3 | Pending |
-| GITB-02 | Phase 3 | Pending |
-| GITB-03 | Phase 3 | Pending |
-| GITB-04 | Phase 3 | Pending |
-| GITB-05 | Phase 3 | Pending |
+| GITB-01 | Phase 3 | Complete |
+| GITB-02 | Phase 3 | Complete |
+| GITB-03 | Phase 3 | Complete |
+| GITB-04 | Phase 3 | Complete |
+| GITB-05 | Phase 3 | Complete |
 
 **Coverage:**
 - v1 requirements: 20 total
