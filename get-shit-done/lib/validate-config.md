@@ -68,6 +68,18 @@ The following fields are validated. Unknown fields are allowed (forward compatib
 | `adaptive.enabled` | boolean | No |
 | `adaptive.knowledge_base` | boolean | No |
 | `adaptive.pattern_extraction` | boolean | No |
+
+### Git Section
+
+| Field | Type | Required |
+|-------|------|----------|
+| `git.auto_commit` | boolean | No |
+| `git.branching_strategy` | string | No |
+
+**Field descriptions:**
+
+- `git.auto_commit` — When `true` (default), the executor auto-commits after each completed task with a standardized message. When `false`, the executor stages files but does NOT commit, prompting the user to review and commit manually. Disable when you want to review changes before committing or prefer custom commit messages.
+- `git.branching_strategy` — Controls automatic branch creation during execution. Values: `"none"` (default, commit to current branch), `"phase"` (create `gsd/phase-{N}-{slug}` branch per phase), `"milestone"` (create `gsd/{version}-{slug}` branch per milestone). Set via `/gsd:settings`.
 </config_schema>
 
 ## Validation Function
@@ -171,6 +183,14 @@ function validateConfig(config) {
       checkType(config.adaptive.enabled, 'boolean', 'adaptive.enabled');
       checkType(config.adaptive.knowledge_base, 'boolean', 'adaptive.knowledge_base');
       checkType(config.adaptive.pattern_extraction, 'boolean', 'adaptive.pattern_extraction');
+    }
+  }
+
+  // Git section
+  if (config.git !== undefined) {
+    if (checkType(config.git, 'object', 'git')) {
+      checkType(config.git.auto_commit, 'boolean', 'git.auto_commit');
+      checkEnum(config.git.branching_strategy, ['none', 'phase', 'milestone'], 'git.branching_strategy');
     }
   }
 
