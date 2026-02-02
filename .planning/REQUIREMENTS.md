@@ -67,32 +67,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CTXF-01 | Pending | Pending |
-| CTXF-02 | Pending | Pending |
-| CTXF-03 | Pending | Pending |
-| CTXF-04 | Pending | Pending |
-| CTXF-05 | Pending | Pending |
-| CTXF-06 | Pending | Pending |
-| CTXF-07 | Pending | Pending |
-| CTXD-01 | Pending | Pending |
-| CTXD-02 | Pending | Pending |
-| AUTO-01 | Pending | Pending |
-| AUTO-02 | Pending | Pending |
-| AUTO-03 | Pending | Pending |
-| AUTO-04 | Pending | Pending |
-| AUTO-05 | Pending | Pending |
-| AUTO-06 | Pending | Pending |
-| GITB-01 | Pending | Pending |
-| GITB-02 | Pending | Pending |
-| GITB-03 | Pending | Pending |
-| GITB-04 | Pending | Pending |
-| GITB-05 | Pending | Pending |
+| CTXF-01 | Phase 1 | Pending |
+| CTXF-02 | Phase 1 | Pending |
+| CTXF-03 | Phase 1 | Pending |
+| CTXF-04 | Phase 1 | Pending |
+| CTXF-05 | Phase 1 | Pending |
+| CTXF-06 | Phase 1 | Pending |
+| CTXF-07 | Phase 1 | Pending |
+| CTXD-01 | Phase 1 | Pending |
+| CTXD-02 | Phase 1 | Pending |
+| AUTO-01 | Phase 2 | Pending |
+| AUTO-02 | Phase 2 | Pending |
+| AUTO-03 | Phase 2 | Pending |
+| AUTO-04 | Phase 2 | Pending |
+| AUTO-05 | Phase 2 | Pending |
+| AUTO-06 | Phase 2 | Pending |
+| GITB-01 | Phase 3 | Pending |
+| GITB-02 | Phase 3 | Pending |
+| GITB-03 | Phase 3 | Pending |
+| GITB-04 | Phase 3 | Pending |
+| GITB-05 | Phase 3 | Pending |
 
 **Coverage:**
 - v1 requirements: 20 total
-- Mapped to phases: 0
-- Unmapped: 20
+- Mapped to phases: 20
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-01*
-*Last updated: 2026-02-01 after initial definition*
+*Last updated: 2026-02-01 after roadmap creation*
