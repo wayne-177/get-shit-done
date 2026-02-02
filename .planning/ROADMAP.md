@@ -57,11 +57,11 @@ Plans:
   2. User selects "phase" strategy — executing a phase creates a `gsd/phase-{N}-{slug}` branch automatically
   3. User selects "milestone" strategy — executing within a milestone creates a `gsd/{version}-{slug}` branch automatically
   4. Squash merge option is available at milestone completion (or explicitly documented as not-yet-implemented if upstream has no implementation)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md — Add branching_strategy enum to config template, validation, and settings UI
+- [ ] 03-02-PLAN.md — Add branch creation logic to execute-phase, new-milestone, and complete-milestone
 
 ## Progress
 
