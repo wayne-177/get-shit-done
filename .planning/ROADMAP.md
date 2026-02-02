@@ -11,7 +11,7 @@ This milestone ports high-value upstream v1.11.1 changes and fixes user autonomy
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
 - [x] **Phase 1: Context Flow & Display** - CONTEXT.md reaches all downstream agents; context bar displays correctly
-- [ ] **Phase 2: User Autonomy** - Framework guardrails become configurable, user overrides respected
+- [x] **Phase 2: User Autonomy** - Framework guardrails become configurable, user overrides respected
 - [ ] **Phase 3: Git Branching** - Branch strategy configurable and executed per phase/milestone
 
 ## Phase Details
@@ -45,8 +45,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Add git and safety config toggles to template, validation, and settings UI
-- [ ] 02-02-PLAN.md — Make executor respect config toggles + create reference doc
+- [x] 02-01-PLAN.md — Add git and safety config toggles to template, validation, and settings UI
+- [x] 02-02-PLAN.md — Make executor respect config toggles + create reference doc
 
 ### Phase 3: Git Branching
 **Goal**: Users can choose a branching strategy and have GSD create/manage branches automatically during execution
@@ -71,5 +71,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Context Flow & Display | 2/2 | Complete | 2026-02-02 |
-| 2. User Autonomy | 0/2 | Not started | - |
+| 2. User Autonomy | 2/2 | Complete | 2026-02-02 |
 | 3. Git Branching | 0/TBD | Not started | - |

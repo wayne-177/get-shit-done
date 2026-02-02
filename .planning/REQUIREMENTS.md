@@ -24,12 +24,12 @@ Requirements for milestone v1.1. Each maps to roadmap phases.
 
 ### User Autonomy
 
-- [ ] **AUTO-01**: `git.auto_commit` config toggle controls whether GSD auto-commits or stages-and-prompts
-- [ ] **AUTO-02**: `/gsd:settings` includes auto-commit preference question
-- [ ] **AUTO-03**: Executor respects `safety.verify_interfaces` config toggle (STRONGLY RECOMMENDED when enabled, skippable when disabled)
-- [ ] **AUTO-04**: Executor respects `safety.verify_requirements` config toggle (STRONGLY RECOMMENDED when enabled, skippable when disabled)
-- [ ] **AUTO-05**: `safety` section in config.json with documented toggleable guardrails
-- [ ] **AUTO-06**: Reference doc explains override capabilities and when to use them
+- [x] **AUTO-01**: `git.auto_commit` config toggle controls whether GSD auto-commits or stages-and-prompts
+- [x] **AUTO-02**: `/gsd:settings` includes auto-commit preference question
+- [x] **AUTO-03**: Executor respects `safety.verify_interfaces` config toggle (STRONGLY RECOMMENDED when enabled, skippable when disabled)
+- [x] **AUTO-04**: Executor respects `safety.verify_requirements` config toggle (STRONGLY RECOMMENDED when enabled, skippable when disabled)
+- [x] **AUTO-05**: `safety` section in config.json with documented toggleable guardrails
+- [x] **AUTO-06**: Reference doc explains override capabilities and when to use them
 
 ### Git Branching
 
@@ -76,12 +76,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CTXF-07 | Phase 1 | Complete |
 | CTXD-01 | Phase 1 | Complete |
 | CTXD-02 | Phase 1 | Complete |
-| AUTO-01 | Phase 2 | Pending |
-| AUTO-02 | Phase 2 | Pending |
-| AUTO-03 | Phase 2 | Pending |
-| AUTO-04 | Phase 2 | Pending |
-| AUTO-05 | Phase 2 | Pending |
-| AUTO-06 | Phase 2 | Pending |
+| AUTO-01 | Phase 2 | Complete |
+| AUTO-02 | Phase 2 | Complete |
+| AUTO-03 | Phase 2 | Complete |
+| AUTO-04 | Phase 2 | Complete |
+| AUTO-05 | Phase 2 | Complete |
+| AUTO-06 | Phase 2 | Complete |
 | GITB-01 | Phase 3 | Pending |
 | GITB-02 | Phase 3 | Pending |
 | GITB-03 | Phase 3 | Pending |
