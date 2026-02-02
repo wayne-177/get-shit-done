@@ -42,11 +42,11 @@ Plans:
   3. User sets `safety.verify_interfaces: false` — executor skips interface verification without error (and vice versa when enabled)
   4. User sets `safety.verify_requirements: false` — executor skips requirements verification without error (and vice versa when enabled)
   5. Reference doc exists explaining what each toggle does and when a user might want to disable it
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md — Add git and safety config toggles to template, validation, and settings UI
+- [ ] 02-02-PLAN.md — Make executor respect config toggles + create reference doc
 
 ### Phase 3: Git Branching
 **Goal**: Users can choose a branching strategy and have GSD create/manage branches automatically during execution
@@ -71,5 +71,5 @@ Phases execute in numeric order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Context Flow & Display | 2/2 | Complete | 2026-02-02 |
-| 2. User Autonomy | 0/TBD | Not started | - |
+| 2. User Autonomy | 0/2 | Not started | - |
 | 3. Git Branching | 0/TBD | Not started | - |
