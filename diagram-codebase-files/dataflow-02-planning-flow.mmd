@@ -1,0 +1,50 @@
+sequenceDiagram
+    participant U as User
+    participant CMD as Command Layer
+    participant WF as plan-phase Workflow
+    participant RES as gsd-phase-researcher
+    participant PLAN as gsd-planner
+    participant CHK as gsd-plan-checker
+    participant STATE as .planning State
+
+    U->>CMD: gsd:plan-phase [n]
+    CMD->>STATE: Load PROJECT.md, ROADMAP.md
+    STATE-->>CMD: Phase goals, requirements
+
+    CMD->>WF: Start phase planning
+
+    opt Research Enabled (config)
+        WF->>RES: Research phase unknowns
+        RES->>RES: Web search, docs review
+        RES->>STATE: Write RESEARCH.md
+        RES-->>WF: Research complete
+    end
+
+    WF->>PLAN: Create execution plans
+    PLAN->>STATE: Read phase goals, research
+    PLAN->>PLAN: Break into tasks
+    PLAN->>PLAN: Identify dependencies
+    PLAN->>PLAN: Assign waves
+    PLAN->>STATE: Write PLAN.md files
+    PLAN-->>WF: Plans created
+
+    opt Plan Check Enabled (config)
+        WF->>CHK: Validate plans
+        CHK->>STATE: Read PLAN.md files
+        CHK->>CHK: Goal-backward analysis
+        CHK->>CHK: Feasibility check
+        CHK->>CHK: Coverage verification
+
+        alt Plans Valid
+            CHK-->>WF: Plans approved
+        else Issues Found
+            CHK-->>WF: Issues reported
+            WF->>PLAN: Revise plans
+            PLAN->>STATE: Update PLAN.md files
+            PLAN-->>WF: Plans revised
+        end
+    end
+
+    WF->>STATE: Update STATE.md
+    WF-->>U: Plans ready for review
+    U->>U: Review and approve plans

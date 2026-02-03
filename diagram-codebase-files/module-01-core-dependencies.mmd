@@ -1,0 +1,104 @@
+graph TB
+    subgraph EntryPoints["Entry Points"]
+        Install["bin - install.js<br/>NPM Package Entry"]
+        UserCmd["User Command<br/>e.g. gsd:execute-phase"]
+    end
+
+    subgraph Commands["Commands (commands - gsd)"]
+        direction LR
+        C_Plan["plan-phase.md"]
+        C_Exec["execute-phase.md<br/>execute-plan.md"]
+        C_Quick["quick.md"]
+        C_Proj["new-project.md<br/>new-milestone.md"]
+        C_Debug["debug.md"]
+        C_Prog["progress.md"]
+        C_Other["35+ more commands..."]
+    end
+
+    subgraph Workflows["Workflows (get-shit-done - workflows)"]
+        direction LR
+        W_ExecPhase["execute-phase.md<br/>(992 lines)"]
+        W_ExecPlan["execute-plan.md<br/>(1844 lines)"]
+        W_PlanPhase["plan-phase.md<br/>(646 lines)"]
+        W_Predict["predict-failures.md<br/>(756 lines)"]
+        W_Retry["retry-orchestration.md<br/>(995 lines)"]
+        W_AutoCorr["auto-correction.md<br/>(899 lines)"]
+        W_Coord["coordinated-execution.md<br/>(868 lines)"]
+        W_Verify["verify-phase.md"]
+        W_Complete["complete-milestone.md<br/>(756 lines)"]
+        W_Analyze["analyze-codebase.md<br/>(923 lines)"]
+    end
+
+    subgraph Agents["Agents (agents)"]
+        direction LR
+        A_Planner["gsd-planner.md<br/>(1386 lines)"]
+        A_Executor["gsd-executor.md<br/>(863 lines)"]
+        A_Debugger["gsd-debugger.md<br/>(1203 lines)"]
+        A_Verifier["gsd-verifier.md<br/>(834 lines)"]
+        A_PlanChk["gsd-plan-checker.md<br/>(745 lines)"]
+        A_ProjRes["gsd-project-researcher.md<br/>(865 lines)"]
+        A_PhaseRes["gsd-phase-researcher.md<br/>(641 lines)"]
+        A_Roadmap["gsd-roadmapper.md<br/>(605 lines)"]
+        A_CodeMap["gsd-codebase-mapper.md<br/>(738 lines)"]
+        A_IntChk["gsd-integration-checker.md<br/>(423 lines)"]
+        A_Synth["gsd-research-synthesizer.md<br/>(256 lines)"]
+    end
+
+    subgraph Library["Library (get-shit-done - lib)"]
+        direction LR
+        L_FailAn["failure-analysis.md"]
+        L_FailDet["failure-detection.md"]
+        L_FailTax["failure-taxonomy.md"]
+        L_Rollback["rollback-strategy.md"]
+        L_PathSel["path-selection.md"]
+        L_RegDet["regression-detection.md"]
+        L_ValConf["validate-config.md"]
+    end
+
+    subgraph References["References (get-shit-done - references)"]
+        direction LR
+        R_Config["config-schema.md"]
+        R_Models["model-profiles.md"]
+        R_Principles["principles.md"]
+        R_Git["git-integration.md"]
+        R_TDD["tdd.md"]
+        R_Verify["verification-guide.md"]
+        R_Check["checkpoints.md"]
+        R_More["12+ more references..."]
+    end
+
+    subgraph Templates["Templates (get-shit-done - templates)"]
+        T_Index["template-index.json"]
+        T_WfTemplates["workflow-templates"]
+    end
+
+    Install -.->|"Copies to IDE"| Commands
+    Install -.->|"Copies to IDE"| Workflows
+    Install -.->|"Copies to IDE"| Agents
+    Install -.->|"Copies to IDE"| Library
+    Install -.->|"Copies to IDE"| References
+
+    UserCmd --> Commands
+    Commands -->|"Route to"| Workflows
+    Workflows -->|"Spawn"| Agents
+    Agents -->|"Use"| Library
+    Agents -->|"Reference"| References
+    Workflows -->|"Use"| Library
+    Workflows -->|"Reference"| References
+    Commands -->|"Index via"| Templates
+
+    classDef entryStyle fill:#E74C3C,stroke:#C0392B,color:#fff
+    classDef cmdStyle fill:#7B68EE,stroke:#5B48CE,color:#fff
+    classDef wfStyle fill:#E67E22,stroke:#C0651B,color:#fff
+    classDef agStyle fill:#27AE60,stroke:#1E8449,color:#fff
+    classDef libStyle fill:#8E44AD,stroke:#6C3483,color:#fff
+    classDef refStyle fill:#3498DB,stroke:#2980B9,color:#fff
+    classDef tplStyle fill:#F39C12,stroke:#D68910,color:#fff
+
+    class Install,UserCmd entryStyle
+    class C_Plan,C_Exec,C_Quick,C_Proj,C_Debug,C_Prog,C_Other cmdStyle
+    class W_ExecPhase,W_ExecPlan,W_PlanPhase,W_Predict,W_Retry,W_AutoCorr,W_Coord,W_Verify,W_Complete,W_Analyze wfStyle
+    class A_Planner,A_Executor,A_Debugger,A_Verifier,A_PlanChk,A_ProjRes,A_PhaseRes,A_Roadmap,A_CodeMap,A_IntChk,A_Synth agStyle
+    class L_FailAn,L_FailDet,L_FailTax,L_Rollback,L_PathSel,L_RegDet,L_ValConf libStyle
+    class R_Config,R_Models,R_Principles,R_Git,R_TDD,R_Verify,R_Check,R_More refStyle
+    class T_Index,T_WfTemplates tplStyle

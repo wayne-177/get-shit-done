@@ -57,4 +57,4 @@ Implemented requirements verification layer across planning, execution, and veri
 
 ---
 
-_Closed: 2026-01-25 - Fix implemented in commit 974820c_
+_Closed: 2026-01-25 - Fix implemented in commit d33d111_

@@ -1,0 +1,48 @@
+graph LR
+    subgraph Profiles["Model Profiles"]
+        Quality["Quality Profile"]
+        Balanced["Balanced Profile<br/>(Default)"]
+        Budget["Budget Profile"]
+    end
+
+    subgraph Opus["Claude Opus 4.5 - High Reasoning"]
+        Planner["gsd-planner<br/>Phase planning<br/>Task breakdown"]
+        Roadmapper["gsd-roadmapper<br/>Roadmap creation<br/>Phase design"]
+    end
+
+    subgraph Sonnet["Claude Sonnet 3.5 - Balanced"]
+        Executor["gsd-executor<br/>Plan execution<br/>Atomic commits"]
+        Verifier["gsd-verifier<br/>Goal verification<br/>Integration checks"]
+        Debugger["gsd-debugger<br/>Systematic debugging<br/>State tracking"]
+        PlanChecker["gsd-plan-checker<br/>Plan validation<br/>Feasibility"]
+        IntChecker["gsd-integration-checker<br/>Cross-phase<br/>E2E flows"]
+    end
+
+    subgraph Haiku["Claude Haiku 4.5 - Fast Research"]
+        ProjRes["gsd-project-researcher<br/>Domain research"]
+        PhaseRes["gsd-phase-researcher<br/>Phase research"]
+        Mapper["gsd-codebase-mapper<br/>Code analysis"]
+        Synth["gsd-research-synthesizer<br/>Research synthesis"]
+    end
+
+    Quality -->|"All Opus"| Opus
+    Quality -->|"Opus or Sonnet"| Sonnet
+    Quality -->|"Sonnet"| Haiku
+
+    Balanced -->|"Opus"| Opus
+    Balanced -->|"Sonnet"| Sonnet
+    Balanced -->|"Haiku"| Haiku
+
+    Budget -->|"Sonnet"| Opus
+    Budget -->|"Haiku"| Sonnet
+    Budget -->|"Haiku"| Haiku
+
+    classDef opusStyle fill:#FF6B6B,stroke:#CC5555,color:#fff
+    classDef sonnetStyle fill:#4ECDC4,stroke:#3BA89F,color:#fff
+    classDef haikuStyle fill:#45B7D1,stroke:#3692A7,color:#fff
+    classDef profileStyle fill:#96CEB4,stroke:#78A896,color:#fff
+
+    class Planner,Roadmapper opusStyle
+    class Executor,Verifier,Debugger,PlanChecker,IntChecker sonnetStyle
+    class ProjRes,PhaseRes,Mapper,Synth haikuStyle
+    class Quality,Balanced,Budget profileStyle

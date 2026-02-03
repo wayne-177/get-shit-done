@@ -1,0 +1,81 @@
+graph TB
+    subgraph UI["User Interface Layer"]
+        CC["Claude Code IDE"]
+        OC["OpenCode IDE"]
+    end
+
+    subgraph CMD["Command Layer (35+ Commands)"]
+        direction LR
+        PlanCmds["Planning Commands<br/>plan-phase, discuss-phase<br/>research-phase"]
+        ExecCmds["Execution Commands<br/>execute-phase, execute-plan<br/>quick"]
+        MgmtCmds["Management Commands<br/>new-project, new-milestone<br/>add-phase, remove-phase"]
+        MonCmds["Monitoring Commands<br/>progress, pause-work<br/>resume-work, check-todos"]
+        AnalCmds["Analysis Commands<br/>analyze-codebase, suggest<br/>debug, verify-work"]
+    end
+
+    subgraph WF["Workflow Orchestration Layer (44+ Workflows)"]
+        direction LR
+        PlanWF["Planning Workflows<br/>plan-phase<br/>predict-failures"]
+        ExecWF["Execution Workflows<br/>execute-phase<br/>execute-plan<br/>coordinated-execution"]
+        QualWF["Quality Workflows<br/>verify-phase<br/>auto-correction<br/>retry-orchestration"]
+        ProjWF["Project Workflows<br/>complete-milestone<br/>analyze-codebase"]
+    end
+
+    subgraph AG["Agent Layer (11 Specialized Agents)"]
+        direction LR
+        PlanAg["gsd-planner<br/>(Opus 4.5)"]
+        ExecAg["gsd-executor<br/>(Sonnet 3.5)"]
+        VerAg["gsd-verifier<br/>(Sonnet 3.5)"]
+        DebugAg["gsd-debugger<br/>(Sonnet 3.5)"]
+        ResAg["gsd-project-researcher<br/>gsd-phase-researcher<br/>(Haiku 4.5)"]
+        MapAg["gsd-codebase-mapper<br/>gsd-roadmapper<br/>(Haiku 4.5)"]
+        CheckAg["gsd-plan-checker<br/>gsd-integration-checker<br/>(Sonnet 3.5)"]
+        SynAg["gsd-research-synthesizer<br/>(Haiku 4.5)"]
+    end
+
+    subgraph LIB["Library Layer"]
+        direction LR
+        FailLib["Failure Handling<br/>analysis, detection<br/>taxonomy, rollback"]
+        RefLib["Reference Library<br/>config-schema<br/>model-profiles<br/>principles"]
+        TplLib["Templates<br/>project init<br/>template-index"]
+    end
+
+    subgraph STATE["State Management (.planning/)"]
+        direction LR
+        StateMD["STATE.md<br/>Current Position"]
+        RoadmapMD["ROADMAP.md<br/>Phase Breakdown"]
+        ProjectMD["PROJECT.md<br/>Vision and Scope"]
+        ConfigJSON["config.json<br/>25+ Settings"]
+        Plans["PLAN.md Files<br/>Executable Plans"]
+    end
+
+    subgraph PROJ["User Project Workspace"]
+        SRC["Source Code"]
+        GIT["Git Repository"]
+        Tests["Test Suite"]
+    end
+
+    UI --> CMD
+    CMD --> WF
+    WF --> AG
+    AG --> LIB
+    AG --> STATE
+    AG --> PROJ
+    WF --> STATE
+    LIB --> STATE
+
+    classDef uiStyle fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    classDef cmdStyle fill:#7B68EE,stroke:#5B48CE,color:#fff
+    classDef wfStyle fill:#E67E22,stroke:#C0651B,color:#fff
+    classDef agStyle fill:#27AE60,stroke:#1E8449,color:#fff
+    classDef libStyle fill:#8E44AD,stroke:#6C3483,color:#fff
+    classDef stateStyle fill:#F39C12,stroke:#D68910,color:#fff
+    classDef projStyle fill:#2C3E50,stroke:#1A252F,color:#fff
+
+    class CC,OC uiStyle
+    class PlanCmds,ExecCmds,MgmtCmds,MonCmds,AnalCmds cmdStyle
+    class PlanWF,ExecWF,QualWF,ProjWF wfStyle
+    class PlanAg,ExecAg,VerAg,DebugAg,ResAg,MapAg,CheckAg,SynAg agStyle
+    class FailLib,RefLib,TplLib libStyle
+    class StateMD,RoadmapMD,ProjectMD,ConfigJSON,Plans stateStyle
+    class SRC,GIT,Tests projStyle

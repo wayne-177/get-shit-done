@@ -1,0 +1,86 @@
+graph TB
+    subgraph ExecGroup["Execution Workflows"]
+        EP["execute-phase.md<br/>Wave-based orchestration"]
+        EPlan["execute-plan.md<br/>Single plan execution"]
+        Coord["coordinated-execution.md<br/>Parallel coordination"]
+    end
+
+    subgraph QualGroup["Quality Workflows"]
+        VP["verify-phase.md<br/>Goal verification"]
+        AC["auto-correction.md<br/>Deviation handling"]
+        PF["predict-failures.md<br/>Proactive analysis"]
+        RO["retry-orchestration.md<br/>Alternative strategies"]
+    end
+
+    subgraph PlanGroup["Planning Workflows"]
+        PP["plan-phase.md<br/>Phase planning"]
+    end
+
+    subgraph ProjGroup["Project Workflows"]
+        CM["complete-milestone.md<br/>Milestone archival"]
+        AB["analyze-codebase.md<br/>Security and tech debt"]
+    end
+
+    subgraph AgentDeps["Agent Dependencies"]
+        Planner["gsd-planner"]
+        Executor["gsd-executor"]
+        Verifier["gsd-verifier"]
+        Debugger["gsd-debugger"]
+        PlanChk["gsd-plan-checker"]
+        Researcher["gsd-phase-researcher"]
+        IntChk["gsd-integration-checker"]
+        Mapper["gsd-codebase-mapper"]
+    end
+
+    subgraph LibDeps["Library Dependencies"]
+        FailDet["failure-detection"]
+        FailAn["failure-analysis"]
+        FailTax["failure-taxonomy"]
+        PathSel["path-selection"]
+        RollStrat["rollback-strategy"]
+        RegDet["regression-detection"]
+    end
+
+    EP -->|"Spawns per plan"| Executor
+    EP -->|"Wave coordination"| Coord
+    EP -->|"Post-execution"| VP
+    EP -->|"On failure"| RO
+
+    EPlan -->|"Spawns"| Executor
+    EPlan -->|"On deviation"| AC
+    EPlan -->|"On failure"| RO
+
+    PP -->|"Spawns"| Planner
+    PP -->|"Optional research"| Researcher
+    PP -->|"Validation"| PlanChk
+
+    VP -->|"Spawns"| Verifier
+    VP -->|"Integration"| IntChk
+
+    AC -->|"Uses"| FailDet
+    AC -->|"Uses"| FailAn
+
+    RO -->|"Uses"| FailTax
+    RO -->|"Uses"| PathSel
+    RO -->|"Uses"| RollStrat
+
+    PF -->|"Uses"| FailTax
+    PF -->|"Uses"| RegDet
+
+    AB -->|"Spawns"| Mapper
+
+    Coord -->|"Manages"| Executor
+
+    classDef execStyle fill:#E67E22,stroke:#C0651B,color:#fff
+    classDef qualStyle fill:#27AE60,stroke:#1E8449,color:#fff
+    classDef planStyle fill:#3498DB,stroke:#2980B9,color:#fff
+    classDef projStyle fill:#8E44AD,stroke:#6C3483,color:#fff
+    classDef agentStyle fill:#F39C12,stroke:#D68910,color:#fff
+    classDef libStyle fill:#E74C3C,stroke:#C0392B,color:#fff
+
+    class EP,EPlan,Coord execStyle
+    class VP,AC,PF,RO qualStyle
+    class PP planStyle
+    class CM,AB projStyle
+    class Planner,Executor,Verifier,Debugger,PlanChk,Researcher,IntChk,Mapper agentStyle
+    class FailDet,FailAn,FailTax,PathSel,RollStrat,RegDet libStyle

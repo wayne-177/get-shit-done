@@ -1,0 +1,140 @@
+# Complete Upstream File Inventory (v1.11.1)
+# Generated: 2026-02-01
+# Total files: 112
+
+## GitHub Infrastructure
+.github/FUNDING.yml
+.github/pull_request_template.md
+
+## Project Root
+.gitignore
+CHANGELOG.md
+CONTRIBUTING.md
+GSD-STYLE.md
+LICENSE
+MAINTAINERS.md
+README.md
+package-lock.json
+package.json
+
+## Bin
+bin/install.js
+
+## Scripts
+scripts/build-hooks.js
+
+## Hooks
+hooks/gsd-check-update.js
+hooks/gsd-statusline.js
+
+## Assets
+assets/gsd-logo-2000.png
+assets/gsd-logo-2000.svg
+assets/terminal.svg
+
+## Agents (14 files)
+agents/gsd-codebase-mapper.md
+agents/gsd-debugger.md
+agents/gsd-executor.md
+agents/gsd-integration-checker.md
+agents/gsd-phase-researcher.md
+agents/gsd-plan-checker.md
+agents/gsd-planner.md
+agents/gsd-project-researcher.md
+agents/gsd-research-synthesizer.md
+agents/gsd-roadmapper.md
+agents/gsd-verifier.md
+
+## Commands (25 files)
+commands/gsd/add-phase.md
+commands/gsd/add-todo.md
+commands/gsd/audit-milestone.md
+commands/gsd/check-todos.md
+commands/gsd/complete-milestone.md
+commands/gsd/debug.md
+commands/gsd/discuss-phase.md
+commands/gsd/execute-phase.md
+commands/gsd/help.md
+commands/gsd/insert-phase.md
+commands/gsd/join-discord.md
+commands/gsd/list-phase-assumptions.md
+commands/gsd/map-codebase.md
+commands/gsd/new-milestone.md
+commands/gsd/new-project.md
+commands/gsd/pause-work.md
+commands/gsd/plan-milestone-gaps.md
+commands/gsd/plan-phase.md
+commands/gsd/progress.md
+commands/gsd/quick.md
+commands/gsd/remove-phase.md
+commands/gsd/research-phase.md
+commands/gsd/resume-work.md
+commands/gsd/set-profile.md
+commands/gsd/settings.md
+commands/gsd/update.md
+commands/gsd/verify-work.md
+
+## References (9 files)
+get-shit-done/references/checkpoints.md
+get-shit-done/references/continuation-format.md
+get-shit-done/references/git-integration.md
+get-shit-done/references/model-profiles.md
+get-shit-done/references/planning-config.md
+get-shit-done/references/questioning.md
+get-shit-done/references/tdd.md
+get-shit-done/references/ui-brand.md
+get-shit-done/references/verification-patterns.md
+
+## Templates - Codebase (7 files)
+get-shit-done/templates/codebase/architecture.md
+get-shit-done/templates/codebase/concerns.md
+get-shit-done/templates/codebase/conventions.md
+get-shit-done/templates/codebase/integrations.md
+get-shit-done/templates/codebase/stack.md
+get-shit-done/templates/codebase/structure.md
+get-shit-done/templates/codebase/testing.md
+
+## Templates - Research Project (5 files)
+get-shit-done/templates/research-project/ARCHITECTURE.md
+get-shit-done/templates/research-project/FEATURES.md
+get-shit-done/templates/research-project/PITFALLS.md
+get-shit-done/templates/research-project/STACK.md
+get-shit-done/templates/research-project/SUMMARY.md
+
+## Templates - Root (18 files)
+get-shit-done/templates/config.json
+get-shit-done/templates/context.md
+get-shit-done/templates/continue-here.md
+get-shit-done/templates/debug-subagent-prompt.md
+get-shit-done/templates/DEBUG.md
+get-shit-done/templates/discovery.md
+get-shit-done/templates/milestone-archive.md
+get-shit-done/templates/milestone.md
+get-shit-done/templates/phase-prompt.md
+get-shit-done/templates/planner-subagent-prompt.md
+get-shit-done/templates/project.md
+get-shit-done/templates/requirements.md
+get-shit-done/templates/research.md
+get-shit-done/templates/roadmap.md
+get-shit-done/templates/state.md
+get-shit-done/templates/summary.md
+get-shit-done/templates/UAT.md
+get-shit-done/templates/user-setup.md
+get-shit-done/templates/verification-report.md
+
+## Workflows (11 files)
+get-shit-done/workflows/complete-milestone.md
+get-shit-done/workflows/diagnose-issues.md
+get-shit-done/workflows/discovery-phase.md
+get-shit-done/workflows/discuss-phase.md
+get-shit-done/workflows/execute-phase.md
+get-shit-done/workflows/execute-plan.md
+get-shit-done/workflows/list-phase-assumptions.md
+get-shit-done/workflows/map-codebase.md
+get-shit-done/workflows/resume-project.md
+get-shit-done/workflows/transition.md
+get-shit-done/workflows/verify-phase.md
+get-shit-done/workflows/verify-work.md
+
+---
+Total: 112 files

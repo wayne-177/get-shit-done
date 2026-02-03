@@ -1,0 +1,50 @@
+sequenceDiagram
+    participant U as User
+    participant CMD as Command Layer
+    participant WF as execute-phase Workflow
+    participant STATE as .planning State
+    participant AG as Agent Spawner
+    participant EXEC as gsd-executor
+    participant VER as gsd-verifier
+    participant GIT as Git Repository
+
+    U->>CMD: gsd:execute-phase [n]
+    CMD->>STATE: Load STATE.md, config.json
+    STATE-->>CMD: Current position, settings
+
+    CMD->>WF: Start phase execution
+    WF->>STATE: Load ROADMAP.md
+    STATE-->>WF: Phase definition, plans
+
+    WF->>WF: Discover all plans for phase
+    WF->>WF: Group plans into waves by dependencies
+
+    loop Each Wave (parallel)
+        WF->>AG: Spawn executor for each plan
+        AG->>EXEC: Launch gsd-executor with PLAN.md
+
+        loop Each Task in Plan
+            EXEC->>EXEC: Execute task actions
+            EXEC->>EXEC: Verify task completion
+            EXEC->>GIT: Atomic commit per task
+            GIT-->>EXEC: Commit confirmed
+        end
+
+        EXEC->>STATE: Write SUMMARY.md
+        EXEC-->>WF: Plan execution complete
+    end
+
+    WF->>AG: Spawn verifier
+    AG->>VER: Verify phase goals
+    VER->>STATE: Read phase objectives
+    VER->>GIT: Check codebase state
+    VER-->>WF: Verification result
+
+    alt Phase Verified
+        WF->>STATE: Update ROADMAP.md (completed)
+        WF->>STATE: Update STATE.md (next phase)
+        WF-->>U: Phase complete, next steps
+    else Verification Failed
+        WF->>STATE: Log issues
+        WF-->>U: Issues found, manual review needed
+    end

@@ -1,0 +1,90 @@
+graph TB
+    subgraph User["User Input"]
+        Slash["Slash Command<br/>e.g. gsd:plan-phase 2"]
+    end
+
+    subgraph Routing["Command Routing"]
+        TemplateIdx["template-index.json<br/>Maps commands to files"]
+        SkillLoader["Skill Loader<br/>Claude Code or OpenCode"]
+    end
+
+    subgraph Planning["Planning Commands"]
+        PlanPhase["gsd:plan-phase<br/>-> plan-phase.md"]
+        DiscussPhase["gsd:discuss-phase<br/>-> discuss-phase.md"]
+        ResearchPhase["gsd:research-phase<br/>-> research-phase.md"]
+        ListAssumptions["gsd:list-phase-assumptions<br/>-> list-phase-assumptions.md"]
+    end
+
+    subgraph Execution["Execution Commands"]
+        ExecutePhase["gsd:execute-phase<br/>-> execute-phase.md (command)"]
+        ExecutePlan["gsd:execute-plan<br/>-> execute-plan.md (command)"]
+        Quick["gsd:quick<br/>-> quick.md"]
+    end
+
+    subgraph Project["Project Commands"]
+        NewProject["gsd:new-project<br/>-> new-project.md"]
+        NewMilestone["gsd:new-milestone<br/>-> new-milestone.md"]
+        CompleteMilestone["gsd:complete-milestone<br/>-> complete-milestone.md"]
+        AuditMilestone["gsd:audit-milestone<br/>-> audit-milestone.md"]
+        DiscussMilestone["gsd:discuss-milestone<br/>-> discuss-milestone.md"]
+    end
+
+    subgraph PhaseManagement["Phase Management"]
+        AddPhase["gsd:add-phase<br/>-> add-phase.md"]
+        InsertPhase["gsd:insert-phase<br/>-> insert-phase.md"]
+        RemovePhase["gsd:remove-phase<br/>-> remove-phase.md"]
+    end
+
+    subgraph Monitor["Monitoring Commands"]
+        Progress["gsd:progress<br/>-> progress.md"]
+        PauseWork["gsd:pause-work<br/>-> pause-work.md"]
+        ResumeWork["gsd:resume-work<br/>-> resume-work.md"]
+        CheckTodos["gsd:check-todos<br/>-> check-todos.md"]
+    end
+
+    subgraph Analysis["Analysis Commands"]
+        Analyze["gsd:analyze-codebase<br/>-> analyze-codebase.md"]
+        Suggest["gsd:suggest<br/>-> suggest.md"]
+        Understand["gsd:understand<br/>-> understand.md"]
+        Debug["gsd:debug<br/>-> debug.md"]
+        VerifyWork["gsd:verify-work<br/>-> verify-work.md"]
+        HealthCheck["gsd:health-check<br/>-> health-check.md"]
+        ConsiderIssues["gsd:consider-issues<br/>-> consider-issues.md"]
+    end
+
+    subgraph Utility["Utility Commands"]
+        Update["gsd:update<br/>-> update.md"]
+        Help["gsd:help<br/>-> help.md"]
+        SetProfile["gsd:set-profile<br/>-> set-profile.md"]
+        Settings["gsd:settings<br/>-> settings.md"]
+    end
+
+    Slash --> SkillLoader
+    SkillLoader --> TemplateIdx
+    TemplateIdx --> Planning
+    TemplateIdx --> Execution
+    TemplateIdx --> Project
+    TemplateIdx --> PhaseManagement
+    TemplateIdx --> Monitor
+    TemplateIdx --> Analysis
+    TemplateIdx --> Utility
+
+    classDef userStyle fill:#2C3E50,stroke:#1A252F,color:#fff
+    classDef routeStyle fill:#E74C3C,stroke:#C0392B,color:#fff
+    classDef planStyle fill:#3498DB,stroke:#2980B9,color:#fff
+    classDef execStyle fill:#E67E22,stroke:#C0651B,color:#fff
+    classDef projStyle fill:#8E44AD,stroke:#6C3483,color:#fff
+    classDef phaseStyle fill:#F39C12,stroke:#D68910,color:#fff
+    classDef monStyle fill:#27AE60,stroke:#1E8449,color:#fff
+    classDef analStyle fill:#1ABC9C,stroke:#16A085,color:#fff
+    classDef utilStyle fill:#95A5A6,stroke:#7F8C8D,color:#fff
+
+    class Slash userStyle
+    class TemplateIdx,SkillLoader routeStyle
+    class PlanPhase,DiscussPhase,ResearchPhase,ListAssumptions planStyle
+    class ExecutePhase,ExecutePlan,Quick execStyle
+    class NewProject,NewMilestone,CompleteMilestone,AuditMilestone,DiscussMilestone projStyle
+    class AddPhase,InsertPhase,RemovePhase phaseStyle
+    class Progress,PauseWork,ResumeWork,CheckTodos monStyle
+    class Analyze,Suggest,Understand,Debug,VerifyWork,HealthCheck,ConsiderIssues analStyle
+    class Update,Help,SetProfile,Settings utilStyle

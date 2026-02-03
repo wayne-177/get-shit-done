@@ -67,6 +67,7 @@ User decisions from `/gsd:discuss-phase` must reach all downstream agents and be
 - Upstream uses tilde paths (`~/.claude/...`), we use absolute paths (`/Users/macuser/.claude/...`) — cosmetic difference
 - 15 upstream changes analyzed: 4 clean ports, 3 merge required, 0 conflicts, 8 skipped
 - Research completed 2026-02-01 across 5 agents (changelog, diff, portability, methodology, autonomy audit)
+- **Future milestone idea:** Codify agent methodology learnings (from `prompt_studio/src/features/research/deo/METHODOLOGY_AND_SOP.md`) into GSD platform — task-aware model selection, incremental disk writes, sequential agent support, adversarial validation, token tracking. Decide whether this belongs in GSD (markdown prompts) or DEO (programmatic control).
 
 ## Constraints
 

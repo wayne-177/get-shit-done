@@ -1,0 +1,37 @@
+# High Priority Files for Detailed Comparison
+# These files contain the most critical changes from upstream v1.9.13+ to v1.11.1
+
+## CRITICAL - CONTEXT.md Flow Fix (v1.11.1)
+commands/gsd/discuss-phase.md
+commands/gsd/plan-phase.md
+agents/gsd-phase-researcher.md
+agents/gsd-planner.md
+agents/gsd-plan-checker.md
+get-shit-done/workflows/discuss-phase.md
+
+## CRITICAL - Git Branching Strategy (v1.11.1)
+commands/gsd/settings.md
+commands/gsd/complete-milestone.md
+get-shit-done/references/git-integration.md
+get-shit-done/templates/config.json
+get-shit-done/workflows/complete-milestone.md
+get-shit-done/workflows/execute-phase.md
+
+## HIGH PRIORITY - Context Compliance Verification (v1.11.1)
+agents/gsd-plan-checker.md
+
+## MEDIUM PRIORITY - Context Bar Fix (v1.10.0)
+hooks/gsd-statusline.js
+
+## MEDIUM PRIORITY - Context File Detection (v1.9.8)
+# Need to search for file detection logic across codebase
+# Likely in: commands/*, agents/*, workflows/*
+
+## LOW PRIORITY - New Commands
+commands/gsd/join-discord.md
+
+## INFRASTRUCTURE
+bin/install.js
+package.json
+CHANGELOG.md
+README.md

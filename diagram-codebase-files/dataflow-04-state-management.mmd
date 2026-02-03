@@ -1,0 +1,62 @@
+graph TB
+    subgraph Inputs["Input Events"]
+        NewProj["New Project<br/>gsd:new-project"]
+        NewMilestone["New Milestone<br/>gsd:new-milestone"]
+        PlanPhase["Plan Phase<br/>gsd:plan-phase"]
+        ExecPhase["Execute Phase<br/>gsd:execute-phase"]
+        Complete["Complete Milestone<br/>gsd:complete-milestone"]
+    end
+
+    subgraph StateFiles[".planning State Files"]
+        PROJECT["PROJECT.md<br/>Vision, Scope<br/>Requirements, Stack"]
+        ROADMAP["ROADMAP.md<br/>Version, Milestones<br/>Phases, Status"]
+        STATE["STATE.md<br/>Current Position<br/>Decisions, Blockers"]
+        CONFIG["config.json<br/>Mode, Depth<br/>Gates, Safety<br/>25+ Settings"]
+        PLANS["Phase PLAN.md Files<br/>Tasks, Dependencies<br/>Waves, Verification"]
+        SUMMARY["SUMMARY.md Files<br/>Execution Results<br/>Issues, Outcomes"]
+        RESEARCH["RESEARCH.md Files<br/>Phase Research<br/>Findings"]
+    end
+
+    subgraph Lifecycle["State Lifecycle"]
+        Init["Initialize<br/>Create PROJECT.md<br/>Create config.json"]
+        Plan["Planning<br/>Create ROADMAP.md<br/>Create PLAN.md files"]
+        Execute["Execution<br/>Update STATE.md<br/>Write SUMMARY.md"]
+        Verify["Verification<br/>Update ROADMAP.md<br/>Update STATE.md"]
+        Archive["Archive<br/>Move to archive<br/>Increment version"]
+    end
+
+    NewProj --> Init
+    Init --> PROJECT
+    Init --> CONFIG
+
+    NewMilestone --> Plan
+    PlanPhase --> Plan
+    Plan --> ROADMAP
+    Plan --> PLANS
+    Plan --> RESEARCH
+
+    ExecPhase --> Execute
+    Execute --> STATE
+    Execute --> SUMMARY
+
+    Execute --> Verify
+    Verify --> ROADMAP
+    Verify --> STATE
+
+    Complete --> Archive
+    Archive --> ROADMAP
+
+    PROJECT -.->|"Read by"| Plan
+    ROADMAP -.->|"Read by"| Execute
+    CONFIG -.->|"Read by"| Execute
+    PLANS -.->|"Read by"| Execute
+    STATE -.->|"Read by"| Plan
+    RESEARCH -.->|"Read by"| Plan
+
+    classDef inputStyle fill:#4A90D9,stroke:#2C5F8A,color:#fff
+    classDef stateStyle fill:#F39C12,stroke:#D68910,color:#fff
+    classDef lifecycleStyle fill:#27AE60,stroke:#1E8449,color:#fff
+
+    class NewProj,NewMilestone,PlanPhase,ExecPhase,Complete inputStyle
+    class PROJECT,ROADMAP,STATE,CONFIG,PLANS,SUMMARY,RESEARCH stateStyle
+    class Init,Plan,Execute,Verify,Archive lifecycleStyle

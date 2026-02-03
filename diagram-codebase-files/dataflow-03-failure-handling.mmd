@@ -1,0 +1,79 @@
+graph TB
+    subgraph Detection["Failure Detection"]
+        ExecOutput["Execution Output"]
+        PatternMatch["Pattern Matching<br/>syntax, logic, blocker<br/>regression, deviation"]
+        Classify["Classify Failure Type"]
+    end
+
+    subgraph Taxonomy["Failure Taxonomy (6 Types)"]
+        Syntax["Syntax Error<br/>Parse failures<br/>Type mismatches"]
+        Logic["Logic Error<br/>Wrong behavior<br/>Edge cases"]
+        Blocker["Blocker<br/>Missing deps<br/>Permission denied"]
+        Regression["Regression<br/>Previously passing<br/>tests now fail"]
+        Deviation["Deviation<br/>Architecture change<br/>Scope creep"]
+        Unknown["Unknown<br/>Unclassifiable"]
+    end
+
+    subgraph Analysis["Failure Analysis"]
+        RootCause["Root Cause Analysis"]
+        Impact["Impact Assessment"]
+        Strategy["Recovery Strategy Selection"]
+    end
+
+    subgraph Recovery["Recovery Paths"]
+        AutoFix["Auto-Fix<br/>Syntax, simple logic"]
+        Retry["Retry with Alt Approach<br/>Path selection algorithm"]
+        Rollback["Rollback<br/>Revert to checkpoint"]
+        Escalate["Escalate to User<br/>After max_attempts"]
+    end
+
+    subgraph State["State Updates"]
+        Checkpoint["Create Checkpoint"]
+        LogIssue["Log Issue"]
+        UpdateState["Update STATE.md"]
+    end
+
+    ExecOutput --> PatternMatch
+    PatternMatch --> Classify
+
+    Classify --> Syntax
+    Classify --> Logic
+    Classify --> Blocker
+    Classify --> Regression
+    Classify --> Deviation
+    Classify --> Unknown
+
+    Syntax --> RootCause
+    Logic --> RootCause
+    Blocker --> RootCause
+    Regression --> RootCause
+    Deviation --> RootCause
+    Unknown --> RootCause
+
+    RootCause --> Impact
+    Impact --> Strategy
+
+    Strategy --> AutoFix
+    Strategy --> Retry
+    Strategy --> Rollback
+    Strategy --> Escalate
+
+    AutoFix --> Checkpoint
+    Retry --> Checkpoint
+    Rollback --> LogIssue
+    Escalate --> LogIssue
+
+    Checkpoint --> UpdateState
+    LogIssue --> UpdateState
+
+    classDef detectStyle fill:#3498DB,stroke:#2980B9,color:#fff
+    classDef taxStyle fill:#E74C3C,stroke:#C0392B,color:#fff
+    classDef analysisStyle fill:#F39C12,stroke:#D68910,color:#fff
+    classDef recoveryStyle fill:#27AE60,stroke:#1E8449,color:#fff
+    classDef stateStyle fill:#8E44AD,stroke:#6C3483,color:#fff
+
+    class ExecOutput,PatternMatch,Classify detectStyle
+    class Syntax,Logic,Blocker,Regression,Deviation,Unknown taxStyle
+    class RootCause,Impact,Strategy analysisStyle
+    class AutoFix,Retry,Rollback,Escalate recoveryStyle
+    class Checkpoint,LogIssue,UpdateState stateStyle
